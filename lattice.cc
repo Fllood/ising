@@ -11,25 +11,25 @@
 
 using namespace std;
 
-lattice::lattice(int length, int dim, double Bfield, int iterations){
-	
-	double T_arr[14] = {3.5, 3.0, 2.5, 2.4, 2.3, 2.27, 2.25, 2.2, 2.1, 2.0, 1.5, 1.0, 0.75, 0.5};
-	
-	for(int i = 0; i < 14; i++){
-		betas.push_back(1/T_arr[i]);		
-		}
+lattice::lattice(int length, int dim, double Bfield, int iterations, double Temp, int eq_time){
 	
 	L = length;
 	d = dim;
 	V = pow(L,d);
-	b = betas.at(0);
 	
-	T = T_arr[0];
+	t_eq = eq_time;
+	
+	T = Temp;
+	b = 1/T;
 
 	B = Bfield;
 	iter = iterations;
 	
 	spins.reserve(V);
+	
+	mag.reserve(iter);
+	
+	eng.reserve(iter);
 	
 	lookup_J.reserve(2*d+1);
 	lookup_B.reserve(2);
@@ -50,6 +50,9 @@ lattice::lattice(int length, int dim, double Bfield, int iterations){
 void lattice::update_lookups(){
 	lookup_J.clear();
 	lookup_B.clear();
+	mag.clear();
+	eng.clear();
+	
 	for(int q = -2*d; q <= 2*d; q += 2){
 		lookup_J.push_back(exp(2*q*b));				// J = 1
 	}
@@ -115,6 +118,12 @@ double lattice::get_eng(){
 	return sum/((double)V);
 	}
 
+
+void lattice::set_T(double Temp){
+	T = Temp;
+	b = 1/T;
+	}
+
 void lattice::sweep(){
 	int s_j_i, q, s_j;							// Index of proposed spin flip, sum of nearest neighbors * value(s_j), value of flipped spin, sum of nearest neighbors
 	double dE, rho, rn;									// Energy difference, acceptance probab. rho, random number
@@ -142,33 +151,36 @@ void lattice::sweep(){
 }
 
 void lattice::run(){
+	ostringstream fs;	
+	
+	this->update_lookups();
+	
+	
+	fs<<"data/ising_"<<T<<".dat";
+		
+	file.open(fs.str().c_str());
+	file<<"#t mag eng# at L="<<L<<" d="<<d<<endl;
+	file.precision(10);
+	cout<<"T = "<<T<<endl;
+	file<<"#T = "<<T<<endl;
+		
 	for(int t = 0; t<iter; t++){
 		this->sweep();
-		file<<t<<" "<<this->get_mag()<<" "<<this->get_eng()<<endl;		
+		file<<t<<" "<<this->get_mag()<<" "<<this->get_eng()<<endl;	// Write measurements to file
+		
+		mag.push_back(this->get_mag());										// Save measurements in vector
+		eng.push_back(this->get_eng());	
 		}
+	
+	file.close();	
+	
 	}
 
 void lattice::betarun(){
 	for(int i = 0; i < betas.size(); i++){
 		b = betas.at(i);
 		T = 1/betas.at(i);
-		ostringstream fs;
-		
-		fs<<"data/ising_1_"<<T<<".dat";
-		
-		file.open(fs.str().c_str());
-		file<<"#t mag eng# at L="<<L<<" d="<<d<<endl;
-		file.precision(10);
-		cout<<"T = "<<T<<endl;
-		file<<"#T = "<<T<<endl;
-		
-		this->update_lookups();
-		
-		this->hot_start();
-		
-		this->run();
-		
-		file.close();	
+			
 		}	
 	}
 

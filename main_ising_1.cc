@@ -6,14 +6,13 @@
 
 using namespace std;
 
-/* compile with "g++ -fopenmp main_ising_1.cc lattice.cc -o ising_ex -lgsl -lgslcblas" */
 
 #include "lattice.h"	// lattice class
 
 int main(int argc, char *argv[])
 {	
-	if(argc != 5){
-		cout<<"usage : ising_ex <length> <dimension> <B-field> <iterations>"<<endl;
+	if(argc != 7){
+		cout<<"usage : ising_ex <length> <dimension> <B-field> <iterations> <T> <eq_time>"<<endl;
 		return 1;
 	}
 	
@@ -21,13 +20,15 @@ int main(int argc, char *argv[])
 	int dim = atoi(argv[2]);
 	double Bfield = atof(argv[3]);
 	int iterations = atoi(argv[4]);
-	
+	double Temp = atof(argv[5]);
+	int eq_time = atoi(argv[6]);
 
-	lattice l1(Len,dim,Bfield,iterations);		// lattice(L,d,B,iter);
+	lattice l1(Len,dim,Bfield,iterations,Temp,eq_time);		// lattice(L,d,B,iter);
+	
 	
 	l1.hot_start();
 
-	l1.betarun();
+	l1.run();
 	
 	return 0;
 }

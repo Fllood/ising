@@ -12,6 +12,10 @@ class lattice{
 	private:
 		vector<short> spins;		// Spins contained in one dim vector
 		
+		vector<double> mag;		// Magnetization measurements
+		
+		vector<double> eng;		// Energy measurements
+		
 		int L;						// Length of axis		
 		
 		int d;						// Dimensions	
@@ -24,7 +28,9 @@ class lattice{
 		
 		double B;					// Magnetic field
 		
-		int iter;
+		int iter;					// Number of steps
+		
+		int t_eq;					// equilibration time
 		
 		
 		vector<double> lookup_J;	// Lookup table for (2*d+1) exponential values containing J
@@ -40,13 +46,15 @@ class lattice{
 	
 	public:
 		
-		lattice(int length, int dim, double Bfield, int iter);
+		lattice(int length, int dim, double Bfield, int iter, double Temp, int eq_time);
 		
 		void update_lookups();		
 		
 		void cold_start();
 		
 		void hot_start();
+		
+		void set_T(double Temp);
 		
 		void display();	
 		
