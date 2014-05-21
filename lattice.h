@@ -20,6 +20,8 @@ class lattice{
 		
 		double b;					// Inverse temperature beta
 		
+		double T;					// Temperature
+		
 		double B;					// Magnetic field
 		
 		int iter;

@@ -3,7 +3,6 @@
 #include <vector>
 #include <math.h>
 #include <fstream>
-#include <omp.h>
 #include <sstream>
 
 #include "lattice.h"
@@ -14,15 +13,18 @@ using namespace std;
 
 lattice::lattice(int length, int dim, double Bfield, int iterations){
 	
-	double T_arr[12] = {3.5, 3.0, 2.5, 2.4, 2.3, 2.27, 2.25, 2.2, 2.1, 2.0, 1.5, 1.0};
+	double T_arr[14] = {3.5, 3.0, 2.5, 2.4, 2.3, 2.27, 2.25, 2.2, 2.1, 2.0, 1.5, 1.0, 0.75, 0.5};
 	
-	for(int i = 0; i < 12; i++){
+	for(int i = 0; i < 14; i++){
 		betas.push_back(1/T_arr[i]);		
 		}
+	
 	L = length;
 	d = dim;
 	V = pow(L,d);
 	b = betas.at(0);
+	
+	T = T_arr[0];
 
 	B = Bfield;
 	iter = iterations;
@@ -98,7 +100,6 @@ int lattice::get_nn_sum(int pos){		// works for d dimensions
 double lattice::get_mag(){
 	double sum = 0;
 	
-	#pragma omp parallel for reduction(+:sum)
 	for(int i = 0; i < V; i++){
 		sum += spins[i];
 		}
@@ -107,7 +108,6 @@ double lattice::get_mag(){
 
 double lattice::get_eng(){
 	double sum = 0;
-	#pragma omp parallel for reduction(+:sum)
 	for(int i = 0; i < V; i++){
 		sum	-= this->get_nn_sum(i)*spins[i];
 		sum -= B*spins[i];
@@ -151,15 +151,16 @@ void lattice::run(){
 void lattice::betarun(){
 	for(int i = 0; i < betas.size(); i++){
 		b = betas.at(i);
+		T = 1/betas.at(i);
 		ostringstream fs;
 		
-		fs<<"data/ising_1_"<<b<<".dat";
+		fs<<"data/ising_1_"<<T<<".dat";
 		
 		file.open(fs.str().c_str());
 		file<<"#t mag eng# at L="<<L<<" d="<<d<<endl;
 		file.precision(10);
-		cout<<"beta = "<<b<<endl;
-		file<<"#beta = "<<b<<endl;
+		cout<<"T = "<<T<<endl;
+		file<<"#T = "<<T<<endl;
 		
 		this->update_lookups();
 		
