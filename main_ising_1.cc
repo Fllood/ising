@@ -9,8 +9,15 @@ using namespace std;
 
 #include "lattice.h"	// lattice class
 
+#include "../gnuplot-iostream/gnuplot-iostream.h" // gnuplot output
+
+#include <boost/tuple/tuple.hpp>
+
+
+
 int main(int argc, char *argv[])
 {	
+
 	if(argc != 7){
 		cout<<"usage : ising_ex <length> <dimension> <B-field> <iterations> <T> <eq_time>"<<endl;
 		return 1;
@@ -29,6 +36,7 @@ int main(int argc, char *argv[])
 	l1.hot_start();
 
 	l1.run();
+	
 	
 	return 0;
 }

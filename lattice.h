@@ -64,7 +64,11 @@ class lattice{
 		
 		double get_mag();
 		
+		vector<double> get_mag_vec();
+		
 		double get_eng();
+		
+		vector<double> get_eng_vec();
 		
 		void sweep();
 		

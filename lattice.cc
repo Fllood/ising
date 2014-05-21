@@ -109,6 +109,10 @@ double lattice::get_mag(){
 	return fabs(sum/((double)V));
 	}
 
+vector<double> lattice::get_mag_vec(){
+	return mag;	
+	}
+
 double lattice::get_eng(){
 	double sum = 0;
 	for(int i = 0; i < V; i++){
@@ -118,6 +122,9 @@ double lattice::get_eng(){
 	return sum/((double)V);
 	}
 
+vector<double> lattice::get_eng_vec(){
+	return eng;	
+	}
 
 void lattice::set_T(double Temp){
 	T = Temp;
