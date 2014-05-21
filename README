@@ -1,1 +1,3 @@
 This is a README file on the Project Metropolis simulation of an Ising model
+
+compile with "g++ main_ising_1.cc lattice.cc -o ising_ex -lgsl -lgslcblas"
