@@ -9,7 +9,7 @@ using namespace std;
 
 #include "lattice.h"	// lattice class
 
-#include "gnuplot_i.hpp" //Gnuplot class handles POSIX-Pipe-communikation with Gnuplot
+#include "gnuplot_i.hpp" //Gnuplot class handles POSIX-Pipe-communication with Gnuplot
 
 void wait_for_key(); // Programm halts until keypress
 
@@ -30,7 +30,6 @@ int main(int argc, char *argv[])
 	int eq_time = atoi(argv[6]);
 
 	lattice l1(Len,dim,Bfield,iterations,Temp,eq_time);		// lattice(L,d,B,iter);
-	
 	
 	l1.hot_start();
 

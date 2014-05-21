@@ -16,6 +16,10 @@ class lattice{
 		
 		vector<double> eng;		// Energy measurements
 		
+		vector<double> corr_mag // Magnetic correlation function
+		
+		vector<double> corr_eng // Energy correlation function
+		
 		int L;						// Length of axis		
 		
 		int d;						// Dimensions	
@@ -69,6 +73,8 @@ class lattice{
 		double get_eng();
 		
 		vector<double> get_eng_vec();
+		
+		double corr_func(int t_c, const vector<double>& vec);
 		
 		void sweep();
 		
