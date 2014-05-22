@@ -189,7 +189,7 @@ void lattice::betarun(){
 
 double lattice::corr_func(int t_c, const vector<double>& y){
 	double sum1 = 0, sum2 = 0, sum3 = 0;
-	int size = y.size();
+	int size = min(int(y.size()),5000);
 	for(int i = 0; i < (size - t_c); i++){
 		sum1 +=  y.at(i)*y.at(i+t_c);
 		sum2 +=  y.at(i);
