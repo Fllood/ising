@@ -79,6 +79,8 @@ class lattice{
 		
 		void calc_corr_t(const vector<double>& vec, vector<double>& corr);
 		
+		void rem_equilib(vector<double>& vec);
+		
 		void sweep();
 		
 		void run();

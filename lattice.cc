@@ -213,6 +213,10 @@ void lattice::calc_corr_t(const vector<double>& vec, vector<double>& corr){
 		}
 	}
 
+void lattice::rem_equilib(vector<double>& vec){
+	vec.erase(myvector.begin(),myvector.begin()+10*t_eq);
+	}
+
 void lattice::display(){
 	for(int i = 0; i < V; i++){
 		if(spins.at(i)>0)cout<<"  ";
