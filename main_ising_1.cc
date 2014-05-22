@@ -2,6 +2,7 @@
 #include <iostream>
 #include <math.h>
 #include <fstream>
+#include <string>
 
 
 using namespace std;
@@ -39,7 +40,7 @@ int main(int argc, char *argv[])
 	{
 		Gnuplot g1("lines");
 		
-		g1.plot_x(l1.get_mag_vec(),"Magnetization per spin versus MC time");
+		g1.plot_x(l1.get_vec("mag"),"Magnetization per spin versus MC time");
 		
 		wait_for_key();		
 		}

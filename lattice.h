@@ -2,6 +2,7 @@
 #define LATTICE_H
 
 #include <vector>
+#include <string>
 
 /* GNU Scientific Library random number generator (rng) */
 #include <gsl/gsl_rng.h>
@@ -16,9 +17,9 @@ class lattice{
 		
 		vector<double> eng;		// Energy measurements
 		
-		vector<double> corr_mag // Magnetic correlation function
+		vector<double> corr_mag; // Magnetic correlation function
 		
-		vector<double> corr_eng // Energy correlation function
+		vector<double> corr_eng; // Energy correlation function
 		
 		
 		int L;						// Length of axis		
@@ -78,6 +79,12 @@ class lattice{
 		double corr_func(int t_c, const vector<double>& vec);
 		
 		void calc_corr_t(const vector<double>& vec, vector<double>& corr);
+		
+		void calc_mag_corr();
+		
+		void calc_eng_corr();
+		
+		vector<double> get_vec(string choice);
 		
 		void rem_equilib(vector<double>& vec);
 		

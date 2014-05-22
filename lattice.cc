@@ -4,6 +4,7 @@
 #include <math.h>
 #include <fstream>
 #include <sstream>
+#include <string>
 
 #include "lattice.h"
 
@@ -109,9 +110,6 @@ double lattice::get_mag(){
 	return fabs(sum/((double)V));
 	}
 
-vector<double> lattice::get_mag_vec(){
-	return mag;	
-	}
 
 double lattice::get_eng(){
 	double sum = 0;
@@ -122,9 +120,6 @@ double lattice::get_eng(){
 	return sum/((double)V);
 	}
 
-vector<double> lattice::get_eng_vec(){
-	return eng;	
-	}
 
 void lattice::set_T(double Temp){
 	T = Temp;
@@ -194,12 +189,12 @@ void lattice::betarun(){
 double lattice::corr_func(int t_c, const vector<double>& y){
 	double sum1 = 0, sum2 = 0, sum3 = 0;
 	int size = y.size();
-	for(int i = 1; i <= (size - t); i++){
-		sum1 +=  y.at(i)*y.at(i+t);
+	for(int i = 1; i <= (size - t_c); i++){
+		sum1 +=  y.at(i)*y.at(i+t_c);
 		sum2 +=  y.at(i);
-		sum3 +=  y.at(i+t);	
+		sum3 +=  y.at(i+t_c);	
 		}
-	double norm = 1/(double(size-t));
+	double norm = 1/(double(size-t_c));
 	sum1 *= norm;
 	sum2 *= norm;
 	sum3 *= norm;
@@ -213,8 +208,25 @@ void lattice::calc_corr_t(const vector<double>& vec, vector<double>& corr){
 		}
 	}
 
+void lattice::calc_mag_corr(){
+	this->rem_equilib(mag);
+	calc_corr_t(mag,corr_mag);
+	}
+
+void lattice::calc_eng_corr(){
+	this->rem_equilib(eng);
+	calc_corr_t(eng,corr_eng);
+	}
+
 void lattice::rem_equilib(vector<double>& vec){
-	vec.erase(myvector.begin(),myvector.begin()+10*t_eq);
+	vec.erase(vec.begin(),vec.begin()+10*t_eq);
+	}
+
+vector<double> lattice::get_vec(string choice){
+	if(choice == "mag") return mag;
+	else if(choice == "eng") return eng;
+	else if(choice == "corr_mag") return corr_mag;
+	else if(choice == "corr_eng") return corr_eng;
 	}
 
 void lattice::display(){
