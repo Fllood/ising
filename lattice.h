@@ -20,6 +20,7 @@ class lattice{
 		
 		vector<double> corr_eng // Energy correlation function
 		
+		
 		int L;						// Length of axis		
 		
 		int d;						// Dimensions	
@@ -75,6 +76,8 @@ class lattice{
 		vector<double> get_eng_vec();
 		
 		double corr_func(int t_c, const vector<double>& vec);
+		
+		void calc_corr_t(const vector<double>& vec, vector<double>& corr);
 		
 		void sweep();
 		

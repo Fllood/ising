@@ -193,17 +193,24 @@ void lattice::betarun(){
 
 double lattice::corr_func(int t_c, const vector<double>& y){
 	double sum1 = 0, sum2 = 0, sum3 = 0;
-	for(int i = 1; i <= (iter - t); i++){
-		sum1 += 	y.at(i)*y.at(i+t);
+	int size = y.size();
+	for(int i = 1; i <= (size - t); i++){
+		sum1 +=  y.at(i)*y.at(i+t);
 		sum2 +=  y.at(i);
 		sum3 +=  y.at(i+t);	
 		}
-	double norm = 1/(double(iter-t));
+	double norm = 1/(double(size-t));
 	sum1 *= norm;
 	sum2 *= norm;
 	sum3 *= norm;
 	
 	return sum1 - sum2 * sum3;
+	}
+
+void lattice::calc_corr_t(const vector<double>& vec, vector<double>& corr){
+	for(int t_c = 0; t_c<vec.size(); t_c++){
+		corr.push_back(corr_func(t_c,vec));
+		}
 	}
 
 void lattice::display(){
