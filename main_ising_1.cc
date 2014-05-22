@@ -36,13 +36,19 @@ int main(int argc, char *argv[])
 
 	l1.run();
 	
+	l1.calc_mag_corr();
+	
 	try
 	{
 		Gnuplot g1("lines");
 		
-		g1.plot_x(l1.get_vec("mag"),"Magnetization per spin versus MC time");
+		g1.plot_x(l1.get_vec("mag"),"Mag per spin versus MC time");
 		
-		wait_for_key();		
+		wait_for_key();
+			
+		g1.plot_x(l1.get_vec("corr_mag"),"Correlation of mag per spin versus MC time");
+		
+		wait_for_key();	
 		}
 	catch (GnuplotException ge)
     {

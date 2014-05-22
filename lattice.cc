@@ -5,6 +5,7 @@
 #include <fstream>
 #include <sstream>
 #include <string>
+#include <algorithm>
 
 #include "lattice.h"
 
@@ -189,7 +190,7 @@ void lattice::betarun(){
 double lattice::corr_func(int t_c, const vector<double>& y){
 	double sum1 = 0, sum2 = 0, sum3 = 0;
 	int size = y.size();
-	for(int i = 1; i <= (size - t_c); i++){
+	for(int i = 0; i < (size - t_c); i++){
 		sum1 +=  y.at(i)*y.at(i+t_c);
 		sum2 +=  y.at(i);
 		sum3 +=  y.at(i+t_c);	
@@ -203,18 +204,20 @@ double lattice::corr_func(int t_c, const vector<double>& y){
 	}
 
 void lattice::calc_corr_t(const vector<double>& vec, vector<double>& corr){
-	for(int t_c = 0; t_c<vec.size(); t_c++){
+	for(int t_c = 0; t_c<min(int(vec.size()),5000); t_c++){
 		corr.push_back(corr_func(t_c,vec));
 		}
 	}
 
 void lattice::calc_mag_corr(){
 	this->rem_equilib(mag);
+	cout<<"begin of correlation calculation"<<endl;
 	calc_corr_t(mag,corr_mag);
 	}
 
 void lattice::calc_eng_corr(){
 	this->rem_equilib(eng);
+	cout<<"begin of correlation calculation"<<endl;
 	calc_corr_t(eng,corr_eng);
 	}
 
