@@ -230,6 +230,7 @@ vector<double> lattice::get_vec(string choice){
 	else if(choice == "eng") return eng;
 	else if(choice == "corr_mag") return corr_mag;
 	else if(choice == "corr_eng") return corr_eng;
+	return mag;
 	}
 
 void lattice::display(){
