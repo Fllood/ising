@@ -47,8 +47,10 @@ int main(int argc, char *argv[])
 		g1.plot_x(l1.get_vec("mag"),"Mag per spin versus MC time");
 		
 		wait_for_key();
+		
+		Gnuplot g2("lines");
 			
-		g1.plot_x(l1.get_vec("corr_mag"),"Correlation of mag per spin versus MC time");
+		g2.plot_x(l1.get_vec("corr_mag"),"Correlation of mag per spin versus MC time");
 		
 		wait_for_key();	
 		}
