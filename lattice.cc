@@ -197,7 +197,6 @@ double lattice::cov_func(int t_c, const vector<double>& y){
 		}
 	double norm = 1/(double(size-t_c));
 	
-	cout << sum1<<" "<<sum2<<" "<< sum3<<endl;
 	return norm*(sum1 - norm * sum2 * sum3);
 	}
 
@@ -231,6 +230,14 @@ void lattice::calc_eng_corr(){
 	for(int i = 0; i<cov_eng.size(); i++){
 		corr_eng.push_back(cov_eng.at(i)/cov_eng.at(0));
 		}
+	}
+
+double lattice::get_avg(const vector<double>& vec){
+	double sum = 0;
+	for(int i = 0; i<vec.size(); i++ ){
+		sum+=vec.at(i);
+		}
+	return sum/double(vec.size());
 	}
 
 void lattice::rem_equilib(vector<double>& vec){

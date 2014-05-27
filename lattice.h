@@ -25,6 +25,10 @@ class lattice{
 		
 		vector<double> corr_eng; 	// Energy correlation function
 		
+		double avg_mag;				// Average magnetization per spin
+		
+		double avg_eng;				// Average energy per spin
+		
 		
 		int L;						// Length of axis		
 		
@@ -91,6 +95,8 @@ class lattice{
 		void calc_mag_corr();
 		
 		void calc_eng_corr();
+		
+		double get_avg(const vector<double>& vec);
 		
 		vector<double> get_vec(string choice);
 		
