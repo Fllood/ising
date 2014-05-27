@@ -13,13 +13,17 @@ class lattice{
 	private:
 		vector<short> spins;		// Spins contained in one dim vector
 		
-		vector<double> mag;		// Magnetization measurements
+		vector<double> mag;			// Magnetization measurements
 		
-		vector<double> eng;		// Energy measurements
+		vector<double> eng;			// Energy measurements
 		
-		vector<double> corr_mag; // Magnetic correlation function
+		vector<double> cov_mag; 	// Magnetic covariance function
 		
-		vector<double> corr_eng; // Energy correlation function
+		vector<double> corr_mag;	// Magnetic correlation function
+		
+		vector<double> cov_eng; 	// Energy covariance function
+		
+		vector<double> corr_eng; 	// Energy correlation function
 		
 		
 		int L;						// Length of axis		
@@ -76,9 +80,13 @@ class lattice{
 		
 		vector<double> get_eng_vec();
 		
-		double corr_func(int t_c, const vector<double>& vec);
+		double cov_func(int t_c, const vector<double>& vec);
 		
-		void calc_corr_t(const vector<double>& vec, vector<double>& corr);
+		void calc_cov_t(const vector<double>& vec, vector<double>& corr);
+		
+		void calc_mag_cov();
+		
+		void calc_eng_cov();
 		
 		void calc_mag_corr();
 		

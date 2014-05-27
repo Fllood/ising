@@ -187,38 +187,50 @@ void lattice::betarun(){
 		}	
 	}
 
-double lattice::corr_func(int t_c, const vector<double>& y){
+double lattice::cov_func(int t_c, const vector<double>& y){
 	double sum1 = 0, sum2 = 0, sum3 = 0;
-	int size = min(int(y.size()),5000);
+	int size = int(y.size());
 	for(int i = 0; i < (size - t_c); i++){
 		sum1 +=  y.at(i)*y.at(i+t_c);
 		sum2 +=  y.at(i);
 		sum3 +=  y.at(i+t_c);	
 		}
 	double norm = 1/(double(size-t_c));
-	sum1 *= norm;
-	sum2 *= norm;
-	sum3 *= norm;
 	
-	return sum1 - sum2 * sum3;
+	cout << sum1<<" "<<sum2<<" "<< sum3<<endl;
+	return norm*(sum1 - norm * sum2 * sum3);
 	}
 
-void lattice::calc_corr_t(const vector<double>& vec, vector<double>& corr){
-	for(int t_c = 0; t_c<min(int(vec.size()),5000); t_c++){
-		corr.push_back(corr_func(t_c,vec));
+void lattice::calc_cov_t(const vector<double>& vec, vector<double>& cov){
+	for(int t_c = 0; t_c<int(vec.size())/5; t_c++){
+		cov.push_back(cov_func(t_c,vec));
 		}
 	}
 
-void lattice::calc_mag_corr(){
+void lattice::calc_mag_cov(){
 	this->rem_equilib(mag);
+	calc_cov_t(mag,cov_mag);
+	}
+
+void lattice::calc_eng_cov(){
+	this->rem_equilib(eng);
+	calc_cov_t(eng,cov_eng);
+	}
+
+void lattice::calc_mag_corr(){
 	cout<<"begin of correlation calculation"<<endl;
-	calc_corr_t(mag,corr_mag);
+	this->calc_mag_cov();
+	for(int i = 0; i<cov_mag.size(); i++){
+		corr_mag.push_back(cov_mag.at(i)/cov_mag.at(0));
+		}
 	}
 
 void lattice::calc_eng_corr(){
-	this->rem_equilib(eng);
 	cout<<"begin of correlation calculation"<<endl;
-	calc_corr_t(eng,corr_eng);
+	this->calc_eng_cov();
+	for(int i = 0; i<cov_eng.size(); i++){
+		corr_eng.push_back(cov_eng.at(i)/cov_eng.at(0));
+		}
 	}
 
 void lattice::rem_equilib(vector<double>& vec){
@@ -230,7 +242,11 @@ vector<double> lattice::get_vec(string choice){
 	else if(choice == "eng") return eng;
 	else if(choice == "corr_mag") return corr_mag;
 	else if(choice == "corr_eng") return corr_eng;
-	return mag;
+	else if(choice == "cov_mag") return cov_mag;
+	else if(choice == "cov_eng") return cov_eng;
+	
+	vector<double> def_vec;
+	return def_vec;
 	}
 
 void lattice::display(){

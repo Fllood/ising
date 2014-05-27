@@ -38,7 +38,7 @@ int main(int argc, char *argv[])
 	
 	l1.calc_mag_corr();
 	
-	cout<<"std dev: "<<sqrt(l1.get_vec("corr_mag").at(0))<<endl;
+	cout<<"std dev: "<<sqrt(l1.get_vec("cov_mag").at(0))<<endl;
 	
 	try
 	{
