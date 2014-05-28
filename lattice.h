@@ -11,7 +11,7 @@ using namespace std;
 
 class lattice{
 	private:
-		vector<short> spins;		// Spins contained in one dim vector
+		vector<short> spins;			// Spins contained in one dim vector
 		
 		vector<double> mag;			// Magnetization measurements
 		
@@ -96,17 +96,20 @@ class lattice{
 		
 		void calc_eng_corr();
 		
+		double calc_tau(const vector<double>& corr);
+		
 		double get_avg(const vector<double>& vec);
+		
+		double get_std_err(const vector<double>& corr);
 		
 		vector<double> get_vec(string choice);
 		
-		void rem_equilib(vector<double>& vec);
+		void equilibrate();
 		
 		void sweep();
 		
 		void run();
 		
-		void betarun();
 	};
 
 #endif

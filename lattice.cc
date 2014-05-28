@@ -158,6 +158,7 @@ void lattice::run(){
 	
 	this->update_lookups();
 	
+	this->equilibrate();
 	
 	fs<<"data/ising_"<<T<<".dat";
 		
@@ -166,28 +167,36 @@ void lattice::run(){
 	file.precision(10);
 	cout<<"T = "<<T<<endl;
 	file<<"#T = "<<T<<endl;
-		
+	
+	int time_s = time(NULL);	
+	
 	for(int t = 0; t<iter; t++){
 		this->sweep();
 		file<<t<<" "<<this->get_mag()<<" "<<this->get_eng()<<endl;	// Write measurements to file
 		
 		mag.push_back(this->get_mag());										// Save measurements in vector
 		eng.push_back(this->get_eng());	
+		
+		if((t%100) == 0){		// feedback every 100 sweeps
+				int time_el = time(NULL)-time_s;
+				int time_e = round((time_el)*(iter/double(t)-1));
+			
+				int min_e = floor(time_e/double(60));
+				int min_el = floor(time_el/double(60));
+				int s_e = time_e - min_e*60;
+				int s_el = time_el - min_el*60;
+				cout <<"\r";
+				cout.flush();
+				cout<<"Elapsed time: "<<min_el<<" min "<<s_el<<" sec; Estimated time: "<<min_e<<" min "<<s_e<<" sec  Progress: "<< round(100*t/iter)<<"%     ";
+			}
 		}
 	
 	file.close();	
 	
 	}
 
-void lattice::betarun(){
-	for(int i = 0; i < betas.size(); i++){
-		b = betas.at(i);
-		T = 1/betas.at(i);
-			
-		}	
-	}
 
-double lattice::cov_func(int t_c, const vector<double>& y){
+double lattice::cov_func(int t_c, const vector<double>& y){		//compute covariance of a vector at time t_c
 	double sum1 = 0, sum2 = 0, sum3 = 0;
 	int size = int(y.size());
 	for(int i = 0; i < (size - t_c); i++){
@@ -207,17 +216,15 @@ void lattice::calc_cov_t(const vector<double>& vec, vector<double>& cov){
 	}
 
 void lattice::calc_mag_cov(){
-	this->rem_equilib(mag);
 	calc_cov_t(mag,cov_mag);
 	}
 
 void lattice::calc_eng_cov(){
-	this->rem_equilib(eng);
 	calc_cov_t(eng,cov_eng);
 	}
 
 void lattice::calc_mag_corr(){
-	cout<<"begin of correlation calculation"<<endl;
+	cout<<endl<<"begin of correlation calculation"<<endl;
 	this->calc_mag_cov();
 	for(int i = 0; i<cov_mag.size(); i++){
 		corr_mag.push_back(cov_mag.at(i)/cov_mag.at(0));
@@ -225,11 +232,23 @@ void lattice::calc_mag_corr(){
 	}
 
 void lattice::calc_eng_corr(){
-	cout<<"begin of correlation calculation"<<endl;
+	cout<<endl<<"begin of correlation calculation"<<endl;
 	this->calc_eng_cov();
 	for(int i = 0; i<cov_eng.size(); i++){
 		corr_eng.push_back(cov_eng.at(i)/cov_eng.at(0));
 		}
+	}
+
+double lattice::calc_tau(const vector<double>& corr){
+	double tau = 0.5;
+	int flag = 0;
+	int t = 1;
+	while(flag == 0){
+		tau += corr.at(t);
+		if(corr.at(t)<0) flag = 1;
+		t++;		
+		}	
+	return tau;
 	}
 
 double lattice::get_avg(const vector<double>& vec){
@@ -240,8 +259,14 @@ double lattice::get_avg(const vector<double>& vec){
 	return sum/double(vec.size());
 	}
 
-void lattice::rem_equilib(vector<double>& vec){
-	vec.erase(vec.begin(),vec.begin()+10*t_eq);
+void lattice::equilibrate(){
+	for(int i = 0; i<20*t_eq; i++){
+		this->sweep();		
+		}
+	}
+
+double lattice::get_std_err(const vector<double>& corr){
+	return 1;	
 	}
 
 vector<double> lattice::get_vec(string choice){

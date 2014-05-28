@@ -36,9 +36,15 @@ int main(int argc, char *argv[])
 
 	l1.run();
 	
-	l1.calc_mag_corr();
+	cout<<"avg mag: "<<sqrt(l1.get_avg(l1.get_vec("mag")))<<endl;	
 	
-	cout<<"std dev: "<<sqrt(l1.get_vec("cov_mag").at(0))<<endl;
+	l1.calc_mag_corr();	
+	
+	cout<<"std dev mag: "<<sqrt(l1.get_vec("cov_mag").at(0))<<endl;
+	
+	double tau_int = l1.calc_tau(l1.get_vec("corr_mag"));
+	
+	cout<<"The integrated autocorrelation time of the magnetization is: "<<tau_int<<endl;	
 	
 	try
 	{
@@ -48,9 +54,10 @@ int main(int argc, char *argv[])
 		
 		wait_for_key();
 		
-		Gnuplot g2("lines");
+		
+		Gnuplot g3("lines");
 			
-		g2.plot_x(l1.get_vec("corr_mag"),"Correlation of mag per spin versus MC time");
+		g3.plot_x(l1.get_vec("corr_mag"),"Correlation of mag per spin versus MC time");
 		
 		wait_for_key();	
 		}
