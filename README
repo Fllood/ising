@@ -1,4 +1,10 @@
 This is a README file on the Project Metropolis simulation of an Ising model
 
 compile with:
-g++ main_ising_1.cc lattice.cc -o ising_ex -lgsl -lgslcblas
+make
+
+The usage of this program is based on a command line interface:
+ising_ex <length of one axis of the grid> <dimension> <B-field>
+	 <iterations> <Temperature> <equilibration time> (in one line)
+
+ 
