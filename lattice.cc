@@ -13,7 +13,7 @@
 
 using namespace std;
 
-lattice::lattice(int length, int dim, double Bfield, int iterations, double Temp, int eq_time){
+lattice::lattice(int length, int dim, double Bfield, int iterations, double Temp, int eq_time, string mode_for_sweep){
 	
 	L = length;
 	d = dim;
@@ -27,14 +27,15 @@ lattice::lattice(int length, int dim, double Bfield, int iterations, double Temp
 	B = Bfield;
 	iter = iterations;
 	
+	mode = mode_for_sweep;
+	
+	cout<< "selected mode: "<<mode<<endl;
+	
 	spins.reserve(V);
 	
 	mag.reserve(iter);
 	
 	eng.reserve(iter);
-	
-	lookup_J.reserve(2*d+1);
-	lookup_B.reserve(2);
 	
 	this->update_lookups();	
 	
@@ -50,18 +51,27 @@ lattice::lattice(int length, int dim, double Bfield, int iterations, double Temp
 	}
 
 void lattice::update_lookups(){
-	lookup_J.clear();
-	lookup_B.clear();
+	lookup_met_J.clear();
+	lookup_met_B.clear();
+	
+	lookup_heat_J.clear();
+	
 	mag.clear();
 	eng.clear();
 	
 	for(int q = -2*d; q <= 2*d; q += 2){
-		lookup_J.push_back(exp(2*q*b));				// J = 1
+		lookup_met_J.push_back(exp(2*q*b));				// J = 1
 	}
 	
 	for(int i = -1; i < 2; i += 2){					// i = +- 1
-		lookup_B.push_back(exp(i*b*B));
+		lookup_met_B.push_back(exp(i*b*B));
 	}
+	
+	
+	for(int q = -2*d; q <= 2*d; q += 2){
+		lookup_heat_J.push_back(1/(1+exp(-2*b*q)));				// J = 1
+	}
+		
 	}
 	
 void lattice::cold_start(){			//all spins pointing up
@@ -127,7 +137,7 @@ void lattice::set_T(double Temp){
 	b = 1/T;
 	}
 
-void lattice::sweep(){
+void lattice::sweep_met(){
 	int s_j_i, q, s_j;							// Index of proposed spin flip, sum of nearest neighbors * value(s_j), value of flipped spin, sum of nearest neighbors
 	double dE, rho, rn;									// Energy difference, acceptance probab. rho, random number
 	for(int i = 0; i < V; i++){
@@ -142,9 +152,9 @@ void lattice::sweep(){
 			//cout<<"q = "<<q<<endl;
 			//cout<<"lookup_index_J = "<<(-s_j*q/2)+d<<endl;
 			
-			rho = lookup_J.at(((-s_j*q)/2)+d);					// Build up rho
-			if(s_j < 0) rho *= lookup_B.at(0);
-			else rho *= lookup_B.at(1);
+			rho = lookup_met_J.at(((-s_j*q)/2)+d);					// Build up rho
+			if(s_j < 0) rho *= lookup_met_B.at(0);
+			else rho *= lookup_met_B.at(1);
 			//cout<<"rho = "<<rho<<endl;
 			
 			rn = gsl_rng_uniform(rng);
@@ -152,6 +162,19 @@ void lattice::sweep(){
 		}
 	}
 }
+
+void lattice::sweep_heat(){
+	int s_j_i,q;
+	double rho,rn;
+	for(int i = 0; i < V; i++){
+		s_j_i = floor(V * gsl_rng_uniform(rng));
+		q = this->get_nn_sum(s_j_i);
+		rho = lookup_heat_J.at((q/2)+d);					// Build up rho
+		rn = gsl_rng_uniform(rng);
+		if(rho<=rn) spins.at(s_j_i)=-1;
+		else spins.at(s_j_i)=1;
+		}
+	}
 
 void lattice::run(){
 	ostringstream fs;	
@@ -171,7 +194,8 @@ void lattice::run(){
 	int time_s = time(NULL);	
 	
 	for(int t = 0; t<iter; t++){
-		this->sweep();
+		if(mode=="heatbath") this->sweep_heat();
+		else this->sweep_met();
 		file<<t<<" "<<this->get_mag()<<" "<<this->get_eng()<<endl;	// Write measurements to file
 		
 		mag.push_back(this->get_mag());										// Save measurements in vector
@@ -210,7 +234,7 @@ double lattice::cov_func(int t_c, const vector<double>& y){		//compute covarianc
 	}
 
 void lattice::calc_cov_t(const vector<double>& vec, vector<double>& cov){
-	for(int t_c = 0; t_c<int(vec.size())/5; t_c++){
+	for(int t_c = 0; t_c<int(vec.size())/10; t_c++){
 		cov.push_back(cov_func(t_c,vec));
 		}
 	}
@@ -224,7 +248,6 @@ void lattice::calc_eng_cov(){
 	}
 
 void lattice::calc_mag_corr(){
-	cout<<endl<<"begin of correlation calculation"<<endl;
 	this->calc_mag_cov();
 	for(int i = 0; i<cov_mag.size(); i++){
 		corr_mag.push_back(cov_mag.at(i)/cov_mag.at(0));
@@ -232,7 +255,6 @@ void lattice::calc_mag_corr(){
 	}
 
 void lattice::calc_eng_corr(){
-	cout<<endl<<"begin of correlation calculation"<<endl;
 	this->calc_eng_cov();
 	for(int i = 0; i<cov_eng.size(); i++){
 		corr_eng.push_back(cov_eng.at(i)/cov_eng.at(0));
@@ -261,12 +283,16 @@ double lattice::get_avg(const vector<double>& vec){
 
 void lattice::equilibrate(){
 	for(int i = 0; i<20*t_eq; i++){
-		this->sweep();		
+		if(mode=="heatbath") this->sweep_heat();
+		else this->sweep_met();		
 		}
 	}
 
-double lattice::get_std_err(const vector<double>& corr){
-	return 1;	
+double lattice::get_std_err(const vector<double>& cov,const vector<double>& corr){
+	double variance = cov.at(0);
+	int N = iter;
+	double tau = this->calc_tau(corr);	
+	return sqrt((variance/double(N))*2*tau);
 	}
 
 vector<double> lattice::get_vec(string choice){

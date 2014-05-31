@@ -18,8 +18,8 @@ int main(int argc, char *argv[])
 {	
 	
 	
-	if(argc != 7){
-		cout<<"usage : ising_ex <length> <dimension> <B-field> <iterations> <T> <eq_time>"<<endl;
+	if(argc != 8){
+		cout<<"usage : ising_ex <length> <dimension> <B-field> <iterations> <T> <eq_time> <mode>"<<endl;
 		return 1;
 	}
 	
@@ -29,16 +29,21 @@ int main(int argc, char *argv[])
 	int iterations = atoi(argv[4]);
 	double Temp = atof(argv[5]);
 	int eq_time = atoi(argv[6]);
+	string mode_for_sweep = argv[7];
 
-	lattice l1(Len,dim,Bfield,iterations,Temp,eq_time);		// lattice(L,d,B,iter);
+	lattice l1(Len,dim,Bfield,iterations,Temp,eq_time, mode_for_sweep);	
 	
 	l1.hot_start();
 
 	l1.run();
 	
-	cout<<"avg mag: "<<sqrt(l1.get_avg(l1.get_vec("mag")))<<endl;	
+	
+	// Magnetization measurement
+	cout<<endl<<"avg mag: "<<l1.get_avg(l1.get_vec("mag"));	
 	
 	l1.calc_mag_corr();	
+	
+	cout<<"(+/-"<<l1.get_std_err(l1.get_vec("cov_mag"),l1.get_vec("corr_mag"))<<")"<<endl;
 	
 	cout<<"std dev mag: "<<sqrt(l1.get_vec("cov_mag").at(0))<<endl;
 	
@@ -46,18 +51,42 @@ int main(int argc, char *argv[])
 	
 	cout<<"The integrated autocorrelation time of the magnetization is: "<<tau_int<<endl;	
 	
+	// Energy measurement
+	cout<<endl<<"avg eng: "<<l1.get_avg(l1.get_vec("eng"));	
+	
+	l1.calc_eng_corr();	
+	
+	cout<<"(+/-"<<l1.get_std_err(l1.get_vec("cov_eng"),l1.get_vec("corr_eng"))<<")"<<endl;
+	
+	cout<<"std dev eng: "<<sqrt(l1.get_vec("cov_eng").at(0))<<endl;
+	
+	tau_int = l1.calc_tau(l1.get_vec("corr_eng"));
+	
+	cout<<"The integrated autocorrelation time of the energy is: "<<tau_int<<endl;
+	
 	try
 	{
 		Gnuplot g1("lines");
 		
 		g1.plot_x(l1.get_vec("mag"),"Mag per spin versus MC time");
 		
-		wait_for_key();
 		
 		
 		Gnuplot g3("lines");
 			
 		g3.plot_x(l1.get_vec("corr_mag"),"Correlation of mag per spin versus MC time");
+		
+
+		
+		Gnuplot g2("lines");
+		
+		g2.plot_x(l1.get_vec("eng"),"Eng per spin versus MC time");
+		
+		
+		
+		Gnuplot g4("lines");
+			
+		g4.plot_x(l1.get_vec("corr_eng"),"Correlation of eng per spin versus MC time");
 		
 		wait_for_key();	
 		}

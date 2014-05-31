@@ -47,9 +47,13 @@ class lattice{
 		int t_eq;					// equilibration time
 		
 		
-		vector<double> lookup_J;	// Lookup table for (2*d+1) exponential values containing J
+		vector<double> lookup_met_J;	// Lookup table for (2*d+1) exponential values containing J
 		
-		vector<double> lookup_B;	// Lookup table for 2 exponential values containing B
+		vector<double> lookup_met_B;	// Lookup table for 2 exponential values containing B
+		
+		vector<double> lookup_heat_J;	// Lookup table for (2*d+1) exponential values containing J (heat bath)
+		
+		string mode;		// metropolis or heat bath
 		
 		/* pointer to the rng */
 		gsl_rng *rng;
@@ -60,7 +64,7 @@ class lattice{
 	
 	public:
 		
-		lattice(int length, int dim, double Bfield, int iter, double Temp, int eq_time);
+		lattice(int length, int dim, double Bfield, int iter, double Temp, int eq_time, string mode_for_sweep);
 		
 		void update_lookups();		
 		
@@ -100,13 +104,15 @@ class lattice{
 		
 		double get_avg(const vector<double>& vec);
 		
-		double get_std_err(const vector<double>& corr);
+		double get_std_err(const vector<double>& cov, const vector<double>& corr);
 		
 		vector<double> get_vec(string choice);
 		
 		void equilibrate();
 		
-		void sweep();
+		void sweep_met();
+		
+		void sweep_heat();
 		
 		void run();
 		
