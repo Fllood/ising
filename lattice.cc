@@ -29,7 +29,7 @@ lattice::lattice(int length, int dim, double Bfield, int iterations, double Temp
 	
 	mode = mode_for_sweep;
 	
-	cout<< "selected mode: "<<mode<<endl;
+	cout<< "selected algorithm: "<<mode<<endl;
 	
 	spins.reserve(V);
 	

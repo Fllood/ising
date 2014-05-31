@@ -19,7 +19,7 @@ int main(int argc, char *argv[])
 	
 	
 	if(argc != 8){
-		cout<<"usage : ising_ex <length> <dimension> <B-field> <iterations> <T> <eq_time> <mode>"<<endl;
+		cout<<"usage : ising_ex <length> <dimension> <B-field> <iterations> <T> <eq_time> <algorithm>"<<endl;
 		return 1;
 	}
 	
