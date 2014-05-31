@@ -245,7 +245,7 @@ class Gnuplot
     /// interpolation and approximation of data, arguments:
     ///  csplines, bezier, acsplines (for data values > 0), sbezier, unique, frequency
     /// (works only with plot_x, plot_xy, plotfile_x, plotfile_xy
-    /// (if smooth is set, set_style has no effekt on data plotting)
+    /// (if smooth is set, set_style has no effect on data plotting)
     Gnuplot& set_smooth(const std::string &stylestr = "csplines");
 
     // ----------------------------------------------------------------------
