@@ -13,11 +13,17 @@
 
 using namespace std;
 
-lattice::lattice(int length, int dim, double Bfield, int iterations, double Temp, int eq_time, string mode_for_sweep){
+lattice::lattice(int length, int dim, double Bfield, int iterations, double Temp, int eq_time, string mode_for_sweep, string output_mode){
 	
 	L = length;
 	d = dim;
 	V = pow(L,d);
+	
+	avg_mag=0;
+	avg_mag_2=0;
+	
+	avg_eng=0;
+	avg_eng_2=0;
 	
 	t_eq = eq_time;
 	
@@ -29,13 +35,17 @@ lattice::lattice(int length, int dim, double Bfield, int iterations, double Temp
 	
 	mode = mode_for_sweep;
 	
+	output = output_mode;
+	
 	cout<< "selected algorithm: "<<mode<<endl;
 	
 	spins.reserve(V);
 	
 	mag.reserve(iter);
+	mag_2.reserve(iter);
 	
 	eng.reserve(iter);
+	eng_2.reserve(iter);
 	
 	this->update_lookups();	
 	
@@ -186,20 +196,37 @@ void lattice::run(){
 	fs<<"data/ising_"<<T<<".dat";
 		
 	file.open(fs.str().c_str());
-	file<<"#t mag eng# at L="<<L<<" d="<<d<<endl;
+	file<<"#t mag mag² eng eng²# at L="<<L<<" d="<<d<<endl;
 	file.precision(10);
 	cout<<"T = "<<T<<endl;
 	file<<"#T = "<<T<<endl;
 	
 	int time_s = time(NULL);	
 	
+	double magn, magn_2, engy, engy_2;
+	
 	for(int t = 0; t<iter; t++){
 		if(mode=="heatbath") this->sweep_heat();
 		else this->sweep_met();
-		file<<t<<" "<<this->get_mag()<<" "<<this->get_eng()<<endl;	// Write measurements to file
 		
-		mag.push_back(this->get_mag());										// Save measurements in vector
-		eng.push_back(this->get_eng());	
+		magn = this->get_mag();
+		magn_2 = pow(this->get_mag(),2);
+		engy = this->get_eng();
+		engy_2 = pow(this->get_eng(),2);
+		
+		if(output=="file")file<<t<<" "<<magn<<" "<<magn_2<<" "<<engy<<" "<<engy_2<<endl;	// Write measurements to file
+		
+		mag.push_back(magn);										// Save measurements in vectors
+		//mag_2.push_back(magn_2);
+		
+		eng.push_back(engy);	
+		//eng_2.push_back(engy_2);
+		
+		avg_mag 	+= magn;
+		avg_mag_2	+= magn_2;
+		
+		avg_eng		+= engy;
+		avg_eng_2	+= engy_2;
 		
 		if((t%100) == 0){		// feedback every 100 sweeps
 				int time_el = time(NULL)-time_s;
@@ -214,6 +241,12 @@ void lattice::run(){
 				cout<<"Elapsed time: "<<min_el<<" min "<<s_el<<" sec; Estimated time: "<<min_e<<" min "<<s_e<<" sec  Progress: "<< round(100*t/iter)<<"%     ";
 			}
 		}
+	
+	avg_mag 	/= double(iter); 
+	avg_mag_2	/= double(iter);
+		
+	avg_eng		/= double(iter);
+	avg_eng_2	/= double(iter);
 	
 	file.close();	
 	
@@ -305,6 +338,24 @@ vector<double> lattice::get_vec(string choice){
 	
 	vector<double> def_vec;
 	return def_vec;
+	}
+
+double lattice::get_spec_heat(){
+	return (avg_eng_2 - pow(avg_eng,2))/pow(T,2);
+	}
+
+double lattice::get_mag_sus(){
+	return (avg_mag_2 - pow(avg_mag,2))/pow(T,2);
+	}
+
+double lattice::get_val(string choice){
+	if(choice == "avg_mag") return avg_mag;
+	else if(choice == "avg_eng") return avg_eng;
+	else if(choice == "avg_mag_2") return avg_mag_2;
+	else if(choice == "avg_eng_2") return avg_eng_2;
+	
+	double def;
+	return def;
 	}
 
 void lattice::display(){

@@ -17,9 +17,8 @@ void wait_for_key(); // Programm halts until keypress
 int main(int argc, char *argv[])
 {	
 	
-	
-	if(argc != 8){
-		cout<<"usage : ising_ex <length> <dimension> <B-field> <iterations> <T> <eq_time> <algorithm>"<<endl;
+	if(argc != 9){
+		cout<<"usage : ising_ex <length> <dimension> <B-field> <iterations> <T> <eq_time> <algorithm> <output>"<<endl;
 		return 1;
 	}
 	
@@ -30,8 +29,9 @@ int main(int argc, char *argv[])
 	double Temp = atof(argv[5]);
 	int eq_time = atoi(argv[6]);
 	string mode_for_sweep = argv[7];
+	string output_mode = argv[8];
 
-	lattice l1(Len,dim,Bfield,iterations,Temp,eq_time, mode_for_sweep);	
+	lattice l1(Len,dim,Bfield,iterations,Temp,eq_time, mode_for_sweep, output_mode);	
 	
 	l1.hot_start();
 
@@ -39,7 +39,8 @@ int main(int argc, char *argv[])
 	
 	
 	// Magnetization measurement
-	cout<<endl<<"avg mag: "<<l1.get_avg(l1.get_vec("mag"));	
+	cout<<endl<<"avg mag: "<<l1.get_val("avg_mag");	
+	
 	
 	l1.calc_mag_corr();	
 	
@@ -47,18 +48,22 @@ int main(int argc, char *argv[])
 	
 	cout<<"std dev mag: "<<sqrt(l1.get_vec("cov_mag").at(0))<<endl;
 	
+	cout<<"mag suscep: "<<l1.get_mag_sus()<<endl;
+	
 	double tau_int = l1.calc_tau(l1.get_vec("corr_mag"));
 	
 	cout<<"The integrated autocorrelation time of the magnetization is: "<<tau_int<<endl;	
 	
 	// Energy measurement
-	cout<<endl<<"avg eng: "<<l1.get_avg(l1.get_vec("eng"));	
+	cout<<endl<<"avg eng: "<<l1.get_val("avg_eng");	
 	
 	l1.calc_eng_corr();	
 	
 	cout<<"(+/-"<<l1.get_std_err(l1.get_vec("cov_eng"),l1.get_vec("corr_eng"))<<")"<<endl;
 	
 	cout<<"std dev eng: "<<sqrt(l1.get_vec("cov_eng").at(0))<<endl;
+	
+	cout<<"specific heat: "<<l1.get_spec_heat()<<endl;
 	
 	tau_int = l1.calc_tau(l1.get_vec("corr_eng"));
 	

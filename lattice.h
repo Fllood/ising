@@ -11,11 +11,15 @@ using namespace std;
 
 class lattice{
 	private:
-		vector<short> spins;			// Spins contained in one dim vector
+		vector<short> spins;		// Spins contained in one dim vector
 		
 		vector<double> mag;			// Magnetization measurements
 		
+		vector<double> mag_2;
+		
 		vector<double> eng;			// Energy measurements
+		
+		vector<double> eng_2;
 		
 		vector<double> cov_mag; 	// Magnetic covariance function
 		
@@ -27,8 +31,11 @@ class lattice{
 		
 		double avg_mag;				// Average magnetization per spin
 		
+		double avg_mag_2;
+		
 		double avg_eng;				// Average energy per spin
 		
+		double avg_eng_2;
 		
 		int L;						// Length of axis		
 		
@@ -55,6 +62,8 @@ class lattice{
 		
 		string mode;		// metropolis or heat bath
 		
+		string output;		// choice of output
+		
 		/* pointer to the rng */
 		gsl_rng *rng;
 		
@@ -64,7 +73,7 @@ class lattice{
 	
 	public:
 		
-		lattice(int length, int dim, double Bfield, int iter, double Temp, int eq_time, string mode_for_sweep);
+		lattice(int length, int dim, double Bfield, int iter, double Temp, int eq_time, string mode_for_sweep, string output_mode);
 		
 		void update_lookups();		
 		
@@ -82,11 +91,7 @@ class lattice{
 		
 		double get_mag();
 		
-		vector<double> get_mag_vec();
-		
 		double get_eng();
-		
-		vector<double> get_eng_vec();
 		
 		double cov_func(int t_c, const vector<double>& vec);
 		
@@ -106,7 +111,13 @@ class lattice{
 		
 		double get_std_err(const vector<double>& cov, const vector<double>& corr);
 		
+		double get_spec_heat();
+		
+		double get_mag_sus();
+		
 		vector<double> get_vec(string choice);
+		
+		double get_val(string choice);
 		
 		void equilibrate();
 		
