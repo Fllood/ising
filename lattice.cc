@@ -20,10 +20,7 @@ lattice::lattice(int length, int dim, double Bfield, int iterations, double Temp
 	V = pow(L,d);
 	
 	avg_mag=0;
-	avg_mag_2=0;
-	
 	avg_eng=0;
-	avg_eng_2=0;
 	
 	t_eq = eq_time;
 	
@@ -32,6 +29,8 @@ lattice::lattice(int length, int dim, double Bfield, int iterations, double Temp
 
 	B = Bfield;
 	iter = iterations;
+	
+	M = 1000;
 	
 	mode = mode_for_sweep;
 	
@@ -42,10 +41,12 @@ lattice::lattice(int length, int dim, double Bfield, int iterations, double Temp
 	spins.reserve(V);
 	
 	mag.reserve(iter);
-	mag_2.reserve(iter);
 	
 	eng.reserve(iter);
-	eng_2.reserve(iter);
+	
+	boot_samples.reserve(iter);
+	
+	boot_values.reserve(M);
 	
 	this->update_lookups();	
 	
@@ -196,37 +197,32 @@ void lattice::run(){
 	fs<<"data/ising_"<<T<<".dat";
 		
 	file.open(fs.str().c_str());
-	file<<"#t mag mag² eng eng²# at L="<<L<<" d="<<d<<endl;
+	file<<"#t mag eng# at L="<<L<<" d="<<d<<endl;
 	file.precision(10);
 	cout<<"T = "<<T<<endl;
 	file<<"#T = "<<T<<endl;
 	
 	int time_s = time(NULL);	
 	
-	double magn, magn_2, engy, engy_2;
+	double magn, engy;
 	
 	for(int t = 0; t<iter; t++){
 		if(mode=="heatbath") this->sweep_heat();
 		else this->sweep_met();
 		
 		magn = this->get_mag();
-		magn_2 = pow(this->get_mag(),2);
+
 		engy = this->get_eng();
-		engy_2 = pow(this->get_eng(),2);
 		
-		if(output=="file")file<<t<<" "<<magn<<" "<<magn_2<<" "<<engy<<" "<<engy_2<<endl;	// Write measurements to file
+		if(output=="file")file<<t<<" "<<magn<<" "<<engy<<endl;	// Write measurements to file
 		
 		mag.push_back(magn);										// Save measurements in vectors
-		//mag_2.push_back(magn_2);
 		
 		eng.push_back(engy);	
-		//eng_2.push_back(engy_2);
 		
-		avg_mag 	+= magn;
-		avg_mag_2	+= magn_2;
+		avg_mag += magn;
+		avg_eng += engy;
 		
-		avg_eng		+= engy;
-		avg_eng_2	+= engy_2;
 		
 		if((t%100) == 0){		// feedback every 100 sweeps
 				int time_el = time(NULL)-time_s;
@@ -242,11 +238,8 @@ void lattice::run(){
 			}
 		}
 	
-	avg_mag 	/= double(iter); 
-	avg_mag_2	/= double(iter);
-		
-	avg_eng		/= double(iter);
-	avg_eng_2	/= double(iter);
+	avg_mag 	/= double(iter); 	
+	avg_eng	/= double(iter);
 	
 	file.close();	
 	
@@ -341,18 +334,68 @@ vector<double> lattice::get_vec(string choice){
 	}
 
 double lattice::get_spec_heat(){
+	double avg_eng_2 = this->get_pow_2_avg(eng);
 	return (avg_eng_2 - pow(avg_eng,2))/pow(T,2);
 	}
 
+double lattice::get_spec_heat_err(){
+	boot_values.clear();
+	for(int i = 0; i<M; i++){
+		boot_samples.clear();
+		for(int j = 0; j<iter; j++){
+			int rn_i = floor(iter*gsl_rng_uniform(rng));		// Random index between 0 and iter-1
+			boot_samples.push_back(eng.at(rn_i));
+			}
+		double avg_boot_eng = this->get_avg(boot_samples);
+		double avg_boot_eng_2 = this->get_pow_2_avg(boot_samples);
+		boot_values.push_back((avg_boot_eng_2 - pow(avg_boot_eng,2))/pow(T,2));
+		}
+	double boot_avg = this->get_avg(boot_values);
+	double sum = 0;
+	for(int i = 0; i<boot_values.size(); i++){
+		sum += pow(boot_values.at(i)-boot_avg,2);		
+		}
+	sum /= boot_values.size();
+	return sqrt(sum);
+	}
+
 double lattice::get_mag_sus(){
-	return (avg_mag_2 - pow(avg_mag,2))/pow(T,2);
+	double avg_mag_2 = this->get_pow_2_avg(mag);
+	return (avg_mag_2 - pow(avg_mag,2))/T;
+	}
+
+double lattice::get_mag_sus_err(){
+	boot_values.clear();
+	for(int i = 0; i<M; i++){
+		boot_samples.clear();
+		for(int j = 0; j<iter; j++){
+			int rn_i = floor(iter*gsl_rng_uniform(rng));		// Random index between 0 and iter-1
+			boot_samples.push_back(mag.at(rn_i));
+			}
+		double avg_boot_mag = this->get_avg(boot_samples);
+		double avg_boot_mag_2 = this->get_pow_2_avg(boot_samples);
+		boot_values.push_back((avg_boot_mag_2 - pow(avg_boot_mag,2))/T);
+		}
+	double boot_avg = this->get_avg(boot_values);
+	double sum = 0;
+	for(int i = 0; i<boot_values.size(); i++){
+		sum += pow(boot_values.at(i)-boot_avg,2);		
+		}
+	sum /= boot_values.size();
+	return sqrt(sum);
+	}
+
+double lattice::get_pow_2_avg(const vector<double>& vec){
+	double sum = 0;
+	for(int i = 0; i<vec.size(); i++){
+		sum += pow(vec.at(i),2);		
+		}	
+	return sum/(double(vec.size()));
 	}
 
 double lattice::get_val(string choice){
 	if(choice == "avg_mag") return avg_mag;
 	else if(choice == "avg_eng") return avg_eng;
-	else if(choice == "avg_mag_2") return avg_mag_2;
-	else if(choice == "avg_eng_2") return avg_eng_2;
 	
 	double def;
 	return def;
