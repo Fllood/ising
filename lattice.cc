@@ -278,10 +278,12 @@ void lattice::scan_t(){
 	
 	this->cold_start();
 	for (int i = 0; i<t_vec.size(); i++){
+		// open(ios::app) files
 		cout<<"T = "<<t_vec.at(i)<<endl;
 		this->set_T(t_vec.at(i));
 		this->update_lookups();
 		this->run();
+		// measure and write to files
 		}
 	}
 
