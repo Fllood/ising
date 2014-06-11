@@ -189,6 +189,7 @@ void lattice::sweep_heat(){
 
 void lattice::run(){
 	ostringstream fs;	
+	ofstream file;
 	
 	this->update_lookups();
 	

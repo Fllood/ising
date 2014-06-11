@@ -74,7 +74,10 @@ int main(int argc, char *argv[])
 		Gnuplot g1("lines");
 		
 		g1.plot_x(l1.get_vec("mag"),"Mag per spin versus MC time");
-		
+		g1<<"set term pdf";
+		g1<<"set output 'output/mag_plot.pdf'";
+		g1<<"replot";
+		g1<<"set term pop";
 		
 		
 		Gnuplot g3("lines");
@@ -86,7 +89,10 @@ int main(int argc, char *argv[])
 		Gnuplot g2("lines");
 		
 		g2.plot_x(l1.get_vec("eng"),"Eng per spin versus MC time");
-		
+		g2<<"set term pdf";
+		g2<<"set output 'output/eng_plot.pdf'";
+		g2<<"replot";
+		g2<<"set term pop";
 		
 		
 		Gnuplot g4("lines");
