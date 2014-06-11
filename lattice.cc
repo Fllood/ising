@@ -187,19 +187,21 @@ void lattice::sweep_heat(){
 	}
 
 void lattice::run(){
-	ostringstream fs;	
+	
+	ofstream file;
+	ostringstream fs;
 	
 	this->update_lookups();
 	
 	this->equilibrate();
-	
-	fs<<"data/ising_"<<T<<".dat";
-		
-	file.open(fs.str().c_str());
-	file<<"#t mag mag² eng eng²# at L="<<L<<" d="<<d<<endl;
-	file.precision(10);
+	if(output=="file"){		
+		fs<<"data/ising_"<<T<<".dat";
+		file.open(fs.str().c_str());
+		file<<"#t mag mag² eng eng²# at L="<<L<<" d="<<d<<endl;
+		file.precision(10);
+		}
 	cout<<"T = "<<T<<endl;
-	file<<"#T = "<<T<<endl;
+	if(output=="file")file<<"#T = "<<T<<endl;
 	
 	int time_s = time(NULL);	
 	
@@ -209,10 +211,10 @@ void lattice::run(){
 		if(mode=="heatbath") this->sweep_heat();
 		else this->sweep_met();
 		
-		magn = this->get_mag();
-		magn_2 = pow(this->get_mag(),2);
-		engy = this->get_eng();
-		engy_2 = pow(this->get_eng(),2);
+		magn 	= this->get_mag();
+		magn_2 	= pow(this->get_mag(),2);
+		engy 	= this->get_eng();
+		engy_2 	= pow(this->get_eng(),2);
 		
 		if(output=="file")file<<t<<" "<<magn<<" "<<magn_2<<" "<<engy<<" "<<engy_2<<endl;	// Write measurements to file
 		
@@ -228,7 +230,7 @@ void lattice::run(){
 		avg_eng		+= engy;
 		avg_eng_2	+= engy_2;
 		
-		if((t%100) == 0){		// feedback every 100 sweeps
+		if((t%200) == 0){		// feedback every 200 sweeps
 				int time_el = time(NULL)-time_s;
 				int time_e = round((time_el)*(iter/double(t)-1));
 			
@@ -248,7 +250,7 @@ void lattice::run(){
 	avg_eng		/= double(iter);
 	avg_eng_2	/= double(iter);
 	
-	file.close();	
+	if(output=="file")file.close();	
 	
 	}
 

@@ -67,8 +67,6 @@ class lattice{
 		/* pointer to the rng */
 		gsl_rng *rng;
 		
-		ofstream file;
-		
 		vector<double> betas;
 	
 	public:

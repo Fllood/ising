@@ -44,9 +44,7 @@ int main(int argc, char *argv[])
 	
 	l1.calc_mag_corr();	
 	
-	cout<<"(+/-"<<l1.get_std_err(l1.get_vec("cov_mag"),l1.get_vec("corr_mag"))<<")"<<endl;
-	
-	cout<<"std dev mag: "<<sqrt(l1.get_vec("cov_mag").at(0))<<endl;
+	cout<<"(+/-)"<<l1.get_std_err(l1.get_vec("cov_mag"),l1.get_vec("corr_mag"))<<endl;
 	
 	cout<<"mag suscep: "<<l1.get_mag_sus()<<endl;
 	
@@ -59,9 +57,7 @@ int main(int argc, char *argv[])
 	
 	l1.calc_eng_corr();	
 	
-	cout<<"(+/-"<<l1.get_std_err(l1.get_vec("cov_eng"),l1.get_vec("corr_eng"))<<")"<<endl;
-	
-	cout<<"std dev eng: "<<sqrt(l1.get_vec("cov_eng").at(0))<<endl;
+	cout<<"(+/-)"<<l1.get_std_err(l1.get_vec("cov_eng"),l1.get_vec("corr_eng"))<<endl;
 	
 	cout<<"specific heat: "<<l1.get_spec_heat()<<endl;
 	
