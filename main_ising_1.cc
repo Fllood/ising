@@ -46,7 +46,9 @@ int main(int argc, char *argv[])
 	
 	cout<<"(+/-)"<<l1.get_std_err(l1.get_vec("cov_mag"),l1.get_vec("corr_mag"))<<endl;
 	
-	cout<<"mag suscep: "<<l1.get_mag_sus()<<endl;
+	double mag_sus = 	l1.get_mag_sus();
+	double mag_sus_err = l1.get_mag_sus_err();
+	cout<<"mag suscep: "<<mag_sus<<"(+/-)"<<mag_sus_err<<endl;
 	
 	double tau_int = l1.calc_tau(l1.get_vec("corr_mag"));
 	
@@ -59,7 +61,9 @@ int main(int argc, char *argv[])
 	
 	cout<<"(+/-)"<<l1.get_std_err(l1.get_vec("cov_eng"),l1.get_vec("corr_eng"))<<endl;
 	
-	cout<<"specific heat: "<<l1.get_spec_heat()<<endl;
+	cout<<"std dev eng: "<<sqrt(l1.get_vec("cov_eng").at(0))<<endl;
+	
+	cout<<"specific heat: "<<l1.get_spec_heat()<<"(+/-)"<<l1.get_spec_heat_err()<<endl;
 	
 	tau_int = l1.calc_tau(l1.get_vec("corr_eng"));
 	

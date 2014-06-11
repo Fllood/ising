@@ -11,15 +11,11 @@ using namespace std;
 
 class lattice{
 	private:
-		vector<short> spins;		// Spins contained in one dim vector
+		vector<short> spins;			// Spins contained in one dim vector
 		
 		vector<double> mag;			// Magnetization measurements
 		
-		vector<double> mag_2;
-		
 		vector<double> eng;			// Energy measurements
-		
-		vector<double> eng_2;
 		
 		vector<double> cov_mag; 	// Magnetic covariance function
 		
@@ -31,27 +27,25 @@ class lattice{
 		
 		double avg_mag;				// Average magnetization per spin
 		
-		double avg_mag_2;
-		
 		double avg_eng;				// Average energy per spin
 		
-		double avg_eng_2;
+		int L;							// Length of axis		
 		
-		int L;						// Length of axis		
+		int d;							// Dimensions	
 		
-		int d;						// Dimensions	
+		int V;							// Volume
 		
-		int V;						// Volume
+		double b;						// Inverse temperature beta
 		
-		double b;					// Inverse temperature beta
+		double T;						// Temperature
 		
-		double T;					// Temperature
+		double B;						// Magnetic field
 		
-		double B;					// Magnetic field
+		int iter;						// Number of steps
 		
-		int iter;					// Number of steps
+		int t_eq;						// equilibration time
 		
-		int t_eq;					// equilibration time
+		int M;							// Bootstrap samples
 		
 		
 		vector<double> lookup_met_J;	// Lookup table for (2*d+1) exponential values containing J
@@ -59,6 +53,11 @@ class lattice{
 		vector<double> lookup_met_B;	// Lookup table for 2 exponential values containing B
 		
 		vector<double> lookup_heat_J;	// Lookup table for (2*d+1) exponential values containing J (heat bath)
+		
+		vector<double> boot_samples;
+		
+		vector<double> boot_values;
+				
 		
 		string mode;		// metropolis or heat bath
 		
@@ -111,7 +110,13 @@ class lattice{
 		
 		double get_spec_heat();
 		
+		double get_spec_heat_err();
+		
 		double get_mag_sus();
+		
+		double get_mag_sus_err();
+		
+		double get_pow_2_avg(const vector<double>& vec);
 		
 		vector<double> get_vec(string choice);
 		
