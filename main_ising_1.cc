@@ -33,79 +33,83 @@ int main(int argc, char *argv[])
 
 	lattice l1(Len,dim,Bfield,iterations,Temp,eq_time, mode_for_sweep, output_mode);	
 	
-	l1.hot_start();
-
-	l1.run();
+	l1.scan_t();
 	
 	
-	// Magnetization measurement
-	cout<<endl<<"avg mag: "<<l1.get_val("avg_mag");	
+	if(Temp){
+		l1.hot_start();
 	
-	
-	l1.calc_mag_corr();	
-	
-	cout<<"(+/-)"<<l1.get_std_err(l1.get_vec("cov_mag"),l1.get_vec("corr_mag"))<<endl;
-	
-	double mag_sus = 	l1.get_mag_sus();
-	double mag_sus_err = l1.get_mag_sus_err();
-	cout<<"mag suscep: "<<mag_sus<<"(+/-)"<<mag_sus_err<<endl;
-	
-	double tau_int = l1.calc_tau(l1.get_vec("corr_mag"));
-	
-	cout<<"The integrated autocorrelation time of the magnetization is: "<<tau_int<<endl;	
-	
-	// Energy measurement
-	cout<<endl<<"avg eng: "<<l1.get_val("avg_eng");	
-	
-	l1.calc_eng_corr();	
-	
-	cout<<"(+/-)"<<l1.get_std_err(l1.get_vec("cov_eng"),l1.get_vec("corr_eng"))<<endl;
-	
-	cout<<"std dev eng: "<<sqrt(l1.get_vec("cov_eng").at(0))<<endl;
-	
-	cout<<"specific heat: "<<l1.get_spec_heat()<<"(+/-)"<<l1.get_spec_heat_err()<<endl;
-	
-	tau_int = l1.calc_tau(l1.get_vec("corr_eng"));
-	
-	cout<<"The integrated autocorrelation time of the energy is: "<<tau_int<<endl;
-	
-	try
-	{
-		Gnuplot g1("lines");
-		
-		g1.plot_x(l1.get_vec("mag"),"Mag per spin versus MC time");
-		g1<<"set term pdf";
-		g1<<"set output 'output/mag_plot.pdf'";
-		g1<<"replot";
-		g1<<"set term pop";
+		l1.run();
 		
 		
-		Gnuplot g3("lines");
+		// Magnetization measurement
+		cout<<endl<<"avg mag: "<<l1.get_val("avg_mag");	
+		
+		
+		l1.calc_mag_corr();	
+		
+		cout<<"(+/-)"<<l1.get_std_err(l1.get_vec("cov_mag"),l1.get_vec("corr_mag"))<<endl;
+		
+		double mag_sus = 	l1.get_mag_sus();
+		double mag_sus_err = l1.get_mag_sus_err();
+		cout<<"mag suscep: "<<mag_sus<<"(+/-)"<<mag_sus_err<<endl;
+		
+		double tau_int = l1.calc_tau(l1.get_vec("corr_mag"));
+		
+		cout<<"The integrated autocorrelation time of the magnetization is: "<<tau_int<<endl;	
+		
+		// Energy measurement
+		cout<<endl<<"avg eng: "<<l1.get_val("avg_eng");	
+		
+		l1.calc_eng_corr();	
+		
+		cout<<"(+/-)"<<l1.get_std_err(l1.get_vec("cov_eng"),l1.get_vec("corr_eng"))<<endl;
+		
+		cout<<"std dev eng: "<<sqrt(l1.get_vec("cov_eng").at(0))<<endl;
+		
+		cout<<"specific heat: "<<l1.get_spec_heat()<<"(+/-)"<<l1.get_spec_heat_err()<<endl;
+		
+		tau_int = l1.calc_tau(l1.get_vec("corr_eng"));
+		
+		cout<<"The integrated autocorrelation time of the energy is: "<<tau_int<<endl;
+		
+		try
+		{
+			Gnuplot g1("lines");
 			
-		g3.plot_x(l1.get_vec("corr_mag"),"Correlation of mag per spin versus MC time");
-		
-
-		
-		Gnuplot g2("lines");
-		
-		g2.plot_x(l1.get_vec("eng"),"Eng per spin versus MC time");
-		g2<<"set term pdf";
-		g2<<"set output 'output/eng_plot.pdf'";
-		g2<<"replot";
-		g2<<"set term pop";
-		
-		
-		Gnuplot g4("lines");
+			g1.plot_x(l1.get_vec("mag"),"Mag per spin versus MC time");
+			g1<<"set term pdf";
+			g1<<"set output 'output/mag_plot.pdf'";
+			g1<<"replot";
+			g1<<"set term pop";
 			
-		g4.plot_x(l1.get_vec("corr_eng"),"Correlation of eng per spin versus MC time");
-		
-		wait_for_key();	
-		}
-	catch (GnuplotException ge)
-    {
-        cout << ge.what() << endl;
-    }
+			
+			Gnuplot g3("lines");
+				
+			g3.plot_x(l1.get_vec("corr_mag"),"Correlation of mag per spin versus MC time");
+			
 	
+			
+			Gnuplot g2("lines");
+			
+			g2.plot_x(l1.get_vec("eng"),"Eng per spin versus MC time");
+			g2<<"set term pdf";
+			g2<<"set output 'output/eng_plot.pdf'";
+			g2<<"replot";
+			g2<<"set term pop";
+			
+			
+			Gnuplot g4("lines");
+				
+			g4.plot_x(l1.get_vec("corr_eng"),"Correlation of eng per spin versus MC time");
+			
+			wait_for_key();	
+			}
+		catch (GnuplotException ge)
+	    {
+	        cout << ge.what() << endl;
+	    }
+	}
 	
 	return 0;
 }

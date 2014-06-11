@@ -130,6 +130,8 @@ class lattice{
 		
 		void run();
 		
+		void scan_t();
+		
 	};
 
 #endif

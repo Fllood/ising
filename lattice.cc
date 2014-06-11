@@ -70,6 +70,9 @@ void lattice::update_lookups(){
 	mag.clear();
 	eng.clear();
 	
+	avg_mag = 0;
+	avg_eng = 0;
+	
 	for(int q = -2*d; q <= 2*d; q += 2){
 		lookup_met_J.push_back(exp(2*q*b));				// J = 1
 	}
@@ -246,6 +249,41 @@ void lattice::run(){
 	
 	}
 
+
+void lattice::scan_t(){
+	vector<double> t_vec;
+	int num = 20;
+	int t_c_num = 10;
+	double start_t = 1;
+	double end_t = 3;
+	double margin = 0.25;
+	double t_c = 2.3;
+	double step = (end_t-start_t-2*margin)/double(num);
+	double step_t_c = 2*margin/double(t_c_num);
+	
+	double cur_t= start_t;
+	for (int i = 0; i <= num+t_c_num; i++){
+		if(cur_t < t_c-margin || cur_t > t_c+margin){
+			t_vec.push_back(cur_t);
+			cur_t += step;
+			}
+		else{
+			t_vec.push_back(cur_t);
+			cur_t += step_t_c;
+			}
+		}
+	cout<<"Scanning over the following range of temperatures:"<<endl;
+	for (int i = 0; i < t_vec.size(); i++)cout<<t_vec.at(i)<<" ";
+	cout<<endl;
+	
+	this->cold_start();
+	for (int i = 0; i<t_vec.size(); i++){
+		cout<<"T = "<<t_vec.at(i)<<endl;
+		this->set_T(t_vec.at(i));
+		this->update_lookups();
+		this->run();
+		}
+	}
 
 double lattice::cov_func(int t_c, const vector<double>& y){		//compute covariance of a vector at time t_c
 	double sum1 = 0, sum2 = 0, sum3 = 0;
