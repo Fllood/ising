@@ -277,13 +277,29 @@ void lattice::scan_t(){
 	cout<<endl;
 	
 	this->cold_start();
+	ofstream file;
+	file.open("data/t_scan.dat");
+	file<<"# Lattice: "<<L<<"^"<<d<<endl;
+	file<<"# T mag magerr sus suserr eng engerr heat heaterr"<<endl;
+	file.close();
 	for (int i = 0; i<t_vec.size(); i++){
-		// open(ios::app) files
+		ofstream appfile;							// open(ios::app) files
+		appfile.open("data/t_scan.dat",ios::app);
+		appfile<<T<<" ";
 		cout<<"T = "<<t_vec.at(i)<<endl;
 		this->set_T(t_vec.at(i));
 		this->update_lookups();
 		this->run();
-		// measure and write to files
+		appfile<<this->get_val("avg_mag")<<" ";
+		this->calc_mag_corr();
+		appfile<<this->get_std_err(this->get_vec("cov_mag"),this->get_vec("corr_mag"))<<" ";
+		appfile<<this->get_mag_sus()<<" "<<this->get_mag_sus_err()<<" ";
+		
+		appfile<<this->get_val("avg_eng")<<" ";
+		this->calc_eng_corr();
+		appfile<<this->get_std_err(this->get_vec("cov_eng"),this->get_vec("corr_eng"))<<" ";
+		appfile<<this-> get_spec_heat()<<" "<<this->get_spec_heat_err()<<endl;
+		appfile.close();
 		}
 	}
 

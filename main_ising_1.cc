@@ -33,10 +33,8 @@ int main(int argc, char *argv[])
 
 	lattice l1(Len,dim,Bfield,iterations,Temp,eq_time, mode_for_sweep, output_mode);	
 	
-	l1.scan_t();
 	
-	
-	if(Temp){
+	if(Temp){		//skip when Temp = 0
 		l1.hot_start();
 	
 		l1.run();
@@ -110,6 +108,9 @@ int main(int argc, char *argv[])
 	        cout << ge.what() << endl;
 	    }
 	}
+	else{
+		l1.scan_t();
+		}
 	
 	return 0;
 }
