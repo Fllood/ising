@@ -70,6 +70,15 @@ void lattice::update_lookups(){
 	mag.clear();
 	eng.clear();
 	
+	cov_mag.clear();
+	corr_mag.clear();
+	
+	cov_eng.clear();
+	corr_eng.clear();
+	
+	boot_samples.clear();
+	boot_values.clear();
+	
 	avg_mag = 0;
 	avg_eng = 0;
 	
@@ -285,10 +294,12 @@ void lattice::scan_t(){
 	for (int i = 0; i<t_vec.size(); i++){
 		ofstream appfile;							// open(ios::app) files
 		appfile.open("data/t_scan.dat",ios::app);
-		appfile<<T<<" ";
-		cout<<"T = "<<t_vec.at(i)<<endl;
+		
 		this->set_T(t_vec.at(i));
 		this->update_lookups();
+		
+		appfile<<T<<" ";
+		cout<<"T = "<<t_vec.at(i)<<endl;
 		this->run();
 		appfile<<this->get_val("avg_mag")<<" ";
 		this->calc_mag_corr();
