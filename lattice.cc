@@ -286,13 +286,13 @@ void lattice::scan_t(){
 	
 	this->cold_start();
 	ofstream file;
-	string filename ("data/t_scan");
+	string filename ("data/t_scan_");
 	filename.append(to_string(time(NULL)));
 	filename.append(".dat");
-	if(fexists(filename)){
+	if(!fexists(filename)){
 		file.open(filename);
 		}
-	file<<"# Lattice: "<<L<<"^"<<d<<endl;
+	file<<"# Lattice: "<<L<<"^"<<d<<" B = "<<B<<" iterations = "<<iter<<endl;
 	file<<"# T mag magerr sus suserr eng engerr heat heaterr"<<endl;
 	file.close();
 	for (int i = 0; i<t_vec.size(); i++){
