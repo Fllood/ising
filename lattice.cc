@@ -470,7 +470,7 @@ double lattice::get_val(string choice){
 	if(choice == "avg_mag") return avg_mag;
 	else if(choice == "avg_eng") return avg_eng;
 	
-	double def;
+	double def = 0.0;
 	return def;
 	}
 
