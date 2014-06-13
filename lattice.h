@@ -132,6 +132,8 @@ class lattice{
 		
 		void scan_t();
 		
+		bool fexists(string filename);
+		
 	};
 
 #endif

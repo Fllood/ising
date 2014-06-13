@@ -212,7 +212,6 @@ void lattice::run(){
 	file.open(fs.str().c_str());
 	file<<"#t mag eng# at L="<<L<<" d="<<d<<endl;
 	file.precision(10);
-	cout<<"T = "<<T<<endl;
 	file<<"#T = "<<T<<endl;
 	
 	int time_s = time(NULL);	
@@ -287,7 +286,12 @@ void lattice::scan_t(){
 	
 	this->cold_start();
 	ofstream file;
-	file.open("data/t_scan.dat");
+	string filename ("data/t_scan");
+	filename.append(to_string(time(NULL)));
+	filename.append(".dat");
+	if(fexists(filename)){
+		file.open(filename);
+		}
 	file<<"# Lattice: "<<L<<"^"<<d<<endl;
 	file<<"# T mag magerr sus suserr eng engerr heat heaterr"<<endl;
 	file.close();
@@ -482,3 +486,9 @@ void lattice::display(){
 			}
 		}	
 	}
+
+bool lattice::fexists(string filename){
+	ifstream ifile(filename);
+	return ifile;
+	}
+
