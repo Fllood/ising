@@ -6,6 +6,7 @@
 #include <sstream>
 #include <string>
 #include <algorithm>
+#include <ctime>
 
 #include "lattice.h"
 
@@ -287,7 +288,7 @@ void lattice::scan_t(){
 	this->cold_start();
 	ofstream file;
 	string filename ("data/t_scan_");
-	filename.append(to_string(time(NULL)));
+	filename.append(get_time_str());
 	filename.append(".dat");
 	if(!fexists(filename)){
 		file.open(filename);
@@ -297,13 +298,13 @@ void lattice::scan_t(){
 	file.close();
 	for (int i = 0; i<t_vec.size(); i++){
 		ofstream appfile;							// open(ios::app) files
-		appfile.open("data/t_scan.dat",ios::app);
+		appfile.open(filename,ios::app);
 		
 		this->set_T(t_vec.at(i));
 		this->update_lookups();
 		
 		appfile<<T<<" ";
-		cout<<"T = "<<t_vec.at(i)<<endl;
+		cout<<endl<<"T = "<<t_vec.at(i)<<endl;
 		this->run();
 		appfile<<this->get_val("avg_mag")<<" ";
 		this->calc_mag_corr();
@@ -492,3 +493,15 @@ bool lattice::fexists(string filename){
 	return ifile;
 	}
 
+string lattice::get_time_str(){
+	time_t rawtime;
+	struct tm * timeinfo;
+	char buffer[80];
+	
+	time (&rawtime);
+	timeinfo = localtime(&rawtime);
+	
+	strftime(buffer,80,"%d-%m-%Y_%I-%M-%S",timeinfo);
+	string str(buffer);
+	return str;
+	}

@@ -134,6 +134,8 @@ class lattice{
 		
 		bool fexists(string filename);
 		
+		string get_time_str();
+		
 	};
 
 #endif
