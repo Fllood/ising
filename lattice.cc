@@ -263,8 +263,8 @@ void lattice::scan_t(){
 	vector<double> t_vec;
 	int num = 20;
 	int t_c_num = 10;
-	double start_t = 1;
-	double end_t = 3;
+	double start_t = 1.5;
+	double end_t = 3.5;
 	double margin = 0.25;
 	double t_c = 2.3;
 	double step = (end_t-start_t-2*margin)/double(num);
