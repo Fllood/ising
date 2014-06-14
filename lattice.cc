@@ -291,14 +291,14 @@ void lattice::scan_t(){
 	filename.append(get_time_str());
 	filename.append(".dat");
 	if(!fexists(filename)){
-		file.open(filename);
+		file.open(filename.c_str());
 		}
 	file<<"# Lattice: "<<L<<"^"<<d<<" B = "<<B<<" iterations = "<<iter<<endl;
 	file<<"# T mag magerr sus suserr eng engerr heat heaterr"<<endl;
 	file.close();
 	for (int i = 0; i<t_vec.size(); i++){
 		ofstream appfile;							// open(ios::app) files
-		appfile.open(filename,ios::app);
+		appfile.open(filename.c_str(),ios::app);
 		
 		this->set_T(t_vec.at(i));
 		this->update_lookups();
@@ -489,7 +489,7 @@ void lattice::display(){
 	}
 
 bool lattice::fexists(string filename){
-	ifstream ifile(filename);
+	ifstream ifile(filename.c_str());
 	return ifile;
 	}
 
