@@ -282,7 +282,7 @@ void lattice::scan_t(){
 			}
 		}
 	cout<<"Scanning over the following range of temperatures:"<<endl;
-	for (int i = 0; i < t_vec.size(); i++)cout<<t_vec.at(i)<<" ";
+	for (unsigned int i = 0; i < t_vec.size(); i++)cout<<t_vec.at(i)<<" ";
 	cout<<endl;
 	
 	this->cold_start();
@@ -296,7 +296,7 @@ void lattice::scan_t(){
 	file<<"# Lattice: "<<L<<"^"<<d<<" B = "<<B<<" iterations = "<<iter<<endl;
 	file<<"# T mag magerr sus suserr eng engerr heat heaterr"<<endl;
 	file.close();
-	for (int i = 0; i<t_vec.size(); i++){
+	for (unsigned int i = 0; i<t_vec.size(); i++){
 		ofstream appfile;							// open(ios::app) files
 		appfile.open(filename.c_str(),ios::app);
 		
@@ -348,14 +348,14 @@ void lattice::calc_eng_cov(){
 
 void lattice::calc_mag_corr(){
 	this->calc_mag_cov();
-	for(int i = 0; i<cov_mag.size(); i++){
+	for(unsigned int i = 0; i<cov_mag.size(); i++){
 		corr_mag.push_back(cov_mag.at(i)/cov_mag.at(0));
 		}
 	}
 
 void lattice::calc_eng_corr(){
 	this->calc_eng_cov();
-	for(int i = 0; i<cov_eng.size(); i++){
+	for(unsigned int i = 0; i<cov_eng.size(); i++){
 		corr_eng.push_back(cov_eng.at(i)/cov_eng.at(0));
 		}
 	}
@@ -374,7 +374,7 @@ double lattice::calc_tau(const vector<double>& corr){
 
 double lattice::get_avg(const vector<double>& vec){
 	double sum = 0;
-	for(int i = 0; i<vec.size(); i++ ){
+	for(unsigned int i = 0; i<vec.size(); i++ ){
 		sum+=vec.at(i);
 		}
 	return sum/double(vec.size());
@@ -425,7 +425,7 @@ double lattice::get_spec_heat_err(){
 		}
 	double boot_avg = this->get_avg(boot_values);
 	double sum = 0;
-	for(int i = 0; i<boot_values.size(); i++){
+	for(unsigned int i = 0; i<boot_values.size(); i++){
 		sum += pow(boot_values.at(i)-boot_avg,2);		
 		}
 	sum /= boot_values.size();
@@ -451,7 +451,7 @@ double lattice::get_mag_sus_err(){
 		}
 	double boot_avg = this->get_avg(boot_values);
 	double sum = 0;
-	for(int i = 0; i<boot_values.size(); i++){
+	for(unsigned int i = 0; i<boot_values.size(); i++){
 		sum += pow(boot_values.at(i)-boot_avg,2);		
 		}
 	sum /= boot_values.size();
@@ -460,7 +460,7 @@ double lattice::get_mag_sus_err(){
 
 double lattice::get_pow_2_avg(const vector<double>& vec){
 	double sum = 0;
-	for(int i = 0; i<vec.size(); i++){
+	for(unsigned int i = 0; i<vec.size(); i++){
 		sum += pow(vec.at(i),2);		
 		}	
 	return sum/(double(vec.size()));
