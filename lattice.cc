@@ -57,7 +57,9 @@ lattice::lattice(int length, int dim, double Bfield, int iterations, double Temp
 	// set seed based on current time
 	long seed = time(NULL);	
 	
-	gsl_rng_set(rng,seed);	
+	gsl_rng_set(rng,seed);
+	
+		
 	
 	
 	}
@@ -82,6 +84,8 @@ void lattice::update_lookups(){
 	
 	avg_mag = 0;
 	avg_eng = 0;
+	
+	wolff_prob = 1 - exp(-2*b); 
 	
 	for(int q = -2*d; q <= 2*d; q += 2){
 		lookup_met_J.push_back(exp(2*q*b));				// J = 1
@@ -198,6 +202,30 @@ void lattice::sweep_heat(){
 		if(rho<=rn) spins.at(s_j_i)=-1;
 		else spins.at(s_j_i)=1;
 		}
+	}
+
+void lattice::sweep_wolff(){
+	int s_j_i,nn;
+	double rho;
+	vector<int> cluster;
+	
+	s_j_i = floor(V * gsl_rng_uniform(rng));
+	
+	cluster.push_back(s_j_i);
+	
+	for(int i = d; i > 0; i--){
+		div = V/(pow(L,i));
+		
+		if((nn=pos+div)>=V)nn -= V;			// helical boundary conditions
+		if(spins[nn]==spins[s_j_i] && !this->in_vec(cluster,nn)){
+			rho = gsl_rng_uniform(rng);
+			if(rho <= wolff_prob){
+				cluster.push_back();
+				}
+			}
+		if((nn=pos-div)<0)nn += V;
+		
+	}
 	}
 
 void lattice::run(){
@@ -504,4 +532,12 @@ string lattice::get_time_str(){
 	strftime(buffer,80,"%d-%m-%Y_%I-%M-%S",timeinfo);
 	string str(buffer);
 	return str;
+	}
+
+bool lattice::in_vec(const vector<int>& vec, int a){
+	bool found = False;
+	for (unsigned int i = 0; i<vec.size(); i++){
+		if(a == vec.at(i)) found = True;
+		}
+	return found;
 	}
