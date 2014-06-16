@@ -10,9 +10,6 @@ using namespace std;
 
 #include "lattice.h"	// lattice class
 
-#include "gnuplot_i.hpp" //Gnuplot class handles POSIX-Pipe-communication with Gnuplot
-
-void wait_for_key(); // Programm halts until keypress
 
 int main(int argc, char *argv[])
 {	
@@ -35,100 +32,12 @@ int main(int argc, char *argv[])
 	
 	
 	if(Temp){		//skip when Temp = 0
-		l1.hot_start();
-	
-		l1.run();
-		
-		
-		// Magnetization measurement
-		cout<<endl<<"avg mag: "<<l1.get_val("avg_mag");	
-		
-		
-		l1.calc_mag_corr();	
-		
-		cout<<"(+/-)"<<l1.get_std_err(l1.get_vec("cov_mag"),l1.get_vec("corr_mag"))<<endl;
-		
-		double mag_sus = 	l1.get_mag_sus();
-		double mag_sus_err = l1.get_mag_sus_err();
-		cout<<"mag suscep: "<<mag_sus<<"(+/-)"<<mag_sus_err<<endl;
-		
-		double tau_int = l1.calc_tau(l1.get_vec("corr_mag"));
-		
-		cout<<"The integrated autocorrelation time of the magnetization is: "<<tau_int<<endl;	
-		
-		// Energy measurement
-		cout<<endl<<"avg eng: "<<l1.get_val("avg_eng");	
-		
-		l1.calc_eng_corr();	
-		
-		cout<<"(+/-)"<<l1.get_std_err(l1.get_vec("cov_eng"),l1.get_vec("corr_eng"))<<endl;
-		
-		cout<<"std dev eng: "<<sqrt(l1.get_vec("cov_eng").at(0))<<endl;
-		
-		cout<<"specific heat: "<<l1.get_spec_heat()<<"(+/-)"<<l1.get_spec_heat_err()<<endl;
-		
-		tau_int = l1.calc_tau(l1.get_vec("corr_eng"));
-		
-		cout<<"The integrated autocorrelation time of the energy is: "<<tau_int<<endl;
-		
-		try
-		{
-			Gnuplot g1("lines");
-			
-			g1.plot_x(l1.get_vec("mag"),"Mag per spin versus MC time");
-			g1<<"set term pdf";
-			g1<<"set output 'output/mag_plot.pdf'";
-			g1<<"replot";
-			g1<<"set term pop";
-			
-			
-			Gnuplot g3("lines");
-				
-			g3.plot_x(l1.get_vec("corr_mag"),"Correlation of mag per spin versus MC time");
-			
-	
-			
-			Gnuplot g2("lines");
-			
-			g2.plot_x(l1.get_vec("eng"),"Eng per spin versus MC time");
-			g2<<"set term pdf";
-			g2<<"set output 'output/eng_plot.pdf'";
-			g2<<"replot";
-			g2<<"set term pop";
-			
-			
-			Gnuplot g4("lines");
-				
-			g4.plot_x(l1.get_vec("corr_eng"),"Correlation of eng per spin versus MC time");
-			
-			wait_for_key();	
-			}
-		catch (GnuplotException ge)
-	    {
-	        cout << ge.what() << endl;
-	    }
+		l1.one_temp();
 	}
 	else{
 		l1.scan_t();
 		}
 	
 	return 0;
-}
-
-void wait_for_key ()
-{
-#if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__TOS_WIN__)  // every keypress registered, also arrow keys
-    cout << endl << "Press any key to continue..." << endl;
-
-    FlushConsoleInputBuffer(GetStdHandle(STD_INPUT_HANDLE));
-    _getch();
-#elif defined(unix) || defined(__unix) || defined(__unix__) || defined(__APPLE__)
-    cout << endl << "Press ENTER to continue..." << endl;
-
-    std::cin.clear();
-    std::cin.ignore(std::cin.rdbuf()->in_avail());
-    std::cin.get();
-#endif
-    return;
 }
 

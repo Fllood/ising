@@ -67,6 +67,10 @@ class lattice{
 		gsl_rng *rng;
 		
 		vector<double> betas;
+		
+		double wolff_prob;
+		
+		double avg_cluster_size;
 	
 	public:
 		
@@ -128,6 +132,8 @@ class lattice{
 		
 		void sweep_heat();
 		
+		void sweep_wolff();
+		
 		void run();
 		
 		void scan_t();
@@ -135,6 +141,12 @@ class lattice{
 		bool fexists(string filename);
 		
 		string get_time_str();
+		
+		bool in_vec(const vector<int>& vec, int a);
+		
+		void one_temp();
+		
+		void wait_for_key();
 		
 	};
 
