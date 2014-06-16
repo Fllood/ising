@@ -155,7 +155,6 @@ double lattice::get_mag(){
 	return fabs(sum/((double)V));
 	}
 
-
 double lattice::get_eng(){
 	double sum = 0;
 	for(int i = 0; i < V; i++){
@@ -164,7 +163,6 @@ double lattice::get_eng(){
 		}
 	return sum/((double)V);
 	}
-
 
 void lattice::set_T(double Temp){
 	T = Temp;
@@ -260,8 +258,9 @@ void lattice::sweep_wolff(){
 			}
 		}
 	avg_cluster_size += cluster.size()/double(iter);
+	//cout<<"cluster size: "<<cluster.size()<<endl;
 	for(unsigned int k = 0; k<cluster.size(); k++){		// flip cluster
-		spins.at(cluster.at(k)) = -spins.at(cluster.at(k)); 
+		spins.at(cluster.at(k)) *= -1; 
 		}
 	}
 
@@ -327,7 +326,6 @@ void lattice::run(){
 		}	
 	
 	}
-
 
 void lattice::scan_t(){
 	vector<double> t_vec;
