@@ -69,6 +69,8 @@ class lattice{
 		vector<double> betas;
 		
 		double wolff_prob;
+		
+		double avg_cluster_size;
 	
 	public:
 		
@@ -140,7 +142,11 @@ class lattice{
 		
 		string get_time_str();
 		
-		bool in_vec(const vector<int>, int a);
+		bool in_vec(const vector<int>& vec, int a);
+		
+		void one_temp();
+		
+		void wait_for_key();
 		
 	};
 

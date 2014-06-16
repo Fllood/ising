@@ -12,6 +12,8 @@
 
 #include <gsl/gsl_rng.h>
 
+#include "gnuplot_i.hpp" //Gnuplot class handles POSIX-Pipe-communication with Gnuplot
+
 using namespace std;
 
 lattice::lattice(int length, int dim, double Bfield, int iterations, double Temp, int eq_time, string mode_for_sweep, string output_mode){
@@ -22,6 +24,8 @@ lattice::lattice(int length, int dim, double Bfield, int iterations, double Temp
 	
 	avg_mag=0;
 	avg_eng=0;
+	
+	avg_cluster_size = 0;
 	
 	t_eq = eq_time;
 	
@@ -84,6 +88,8 @@ void lattice::update_lookups(){
 	
 	avg_mag = 0;
 	avg_eng = 0;
+	
+	avg_cluster_size = 0;
 	
 	wolff_prob = 1 - exp(-2*b); 
 	
@@ -205,27 +211,58 @@ void lattice::sweep_heat(){
 	}
 
 void lattice::sweep_wolff(){
-	int s_j_i,nn;
+	int rs,s,nn;
 	double rho;
-	vector<int> cluster;
+	vector<int> cluster, added_spins, current_spins;
 	
-	s_j_i = floor(V * gsl_rng_uniform(rng));
+	rs = floor(V * gsl_rng_uniform(rng));			// choose random seed spin
 	
-	cluster.push_back(s_j_i);
+	cluster.push_back(rs);							// add seed to cluster
+	added_spins.push_back(rs);
 	
-	for(int i = d; i > 0; i--){
-		div = V/(pow(L,i));
+	bool flag = true;
+	
+	while(flag == true){
 		
-		if((nn=pos+div)>=V)nn -= V;			// helical boundary conditions
-		if(spins[nn]==spins[s_j_i] && !this->in_vec(cluster,nn)){
-			rho = gsl_rng_uniform(rng);
-			if(rho <= wolff_prob){
-				cluster.push_back();
+		flag = false;
+		
+		current_spins = added_spins;
+		added_spins.clear();
+		
+		for(unsigned int j = 0; j < current_spins.size(); j++){
+			
+			s = current_spins.at(j);
+			
+			for(int i = d; i > 0; i--){
+				int div = V/(pow(L,i));
+				
+				if((nn=s+div)>=V)nn -= V;			// helical boundary conditions
+				if(!this->in_vec(cluster,nn) && spins[nn]==spins[s]){
+					rho = gsl_rng_uniform(rng);
+					if(rho <= wolff_prob){
+						cluster.push_back(nn);
+						added_spins.push_back(nn);
+						flag = true;
+						}
+					}
+				
+				if((nn=s-div)<0)nn += V;
+				if(!this->in_vec(cluster,nn) && spins[nn]==spins[s] ){
+					rho = gsl_rng_uniform(rng);
+					if(rho <= wolff_prob){
+						cluster.push_back(nn);
+						added_spins.push_back(nn);
+						flag = true;
+						}
+					}
+				
 				}
 			}
-		if((nn=pos-div)<0)nn += V;
-		
-	}
+		}
+	avg_cluster_size += cluster.size()/double(iter);
+	for(unsigned int k = 0; k<cluster.size(); k++){		// flip cluster
+		spins.at(cluster.at(k)) = -spins.at(cluster.at(k)); 
+		}
 	}
 
 void lattice::run(){
@@ -249,7 +286,8 @@ void lattice::run(){
 	
 	for(int t = 0; t<iter; t++){
 		if(mode=="heatbath") this->sweep_heat();
-		else this->sweep_met();
+		else if(mode =="wolff") this->sweep_wolff();
+		else  this->sweep_met();
 		
 		magn = this->get_mag();
 
@@ -282,7 +320,11 @@ void lattice::run(){
 	avg_mag 	/= double(iter); 	
 	avg_eng	/= double(iter);
 	
-	file.close();	
+	file.close();
+	
+	if(mode == "wolff"){
+		cout<<"Average cluster size: "<<avg_cluster_size<<endl;
+		}	
 	
 	}
 
@@ -535,9 +577,97 @@ string lattice::get_time_str(){
 	}
 
 bool lattice::in_vec(const vector<int>& vec, int a){
-	bool found = False;
+	bool found = false;
 	for (unsigned int i = 0; i<vec.size(); i++){
-		if(a == vec.at(i)) found = True;
+		if(a == vec.at(i)) found = true;
 		}
 	return found;
+	}
+
+void lattice::one_temp(){
+	this->hot_start();
+	
+	this->run();
+	
+	
+	// Magnetization measurement
+	cout<<endl<<"avg mag: "<<this->get_val("avg_mag");	
+	
+	
+	this->calc_mag_corr();	
+	
+	cout<<"(+/-)"<<this->get_std_err(this->get_vec("cov_mag"),this->get_vec("corr_mag"))<<endl;
+	
+	double mag_sus = 	this->get_mag_sus();
+	double mag_sus_err = this->get_mag_sus_err();
+	cout<<"mag suscep: "<<mag_sus<<"(+/-)"<<mag_sus_err<<endl;
+	
+	double tau_int = this->calc_tau(this->get_vec("corr_mag"));
+	
+	cout<<"The integrated autocorrelation time of the magnetization is: "<<tau_int<<endl;	
+	
+	// Energy measurement
+	cout<<endl<<"avg eng: "<<this->get_val("avg_eng");	
+	
+	this->calc_eng_corr();	
+	
+	cout<<"(+/-)"<<this->get_std_err(this->get_vec("cov_eng"),this->get_vec("corr_eng"))<<endl;
+	
+	cout<<"specific heat: "<<this->get_spec_heat()<<"(+/-)"<<this->get_spec_heat_err()<<endl;
+	
+	tau_int = this->calc_tau(this->get_vec("corr_eng"));
+	
+	cout<<"The integrated autocorrelation time of the energy is: "<<tau_int<<endl;
+	
+	try
+	{
+		Gnuplot g1("lines");
+		
+		g1.plot_x(this->get_vec("mag"),"Mag per spin versus MC time");
+		g1<<"set term pdf";
+		g1<<"set output 'output/mag_plot.pdf'";
+		g1<<"replot";
+		g1<<"set term pop";
+		
+		
+		Gnuplot g3("lines");
+			
+		g3.plot_x(this->get_vec("corr_mag"),"Correlation of mag per spin versus MC time");
+		
+
+		
+		Gnuplot g2("lines");
+		
+		g2.plot_x(this->get_vec("eng"),"Eng per spin versus MC time");
+		g2<<"set term pdf";
+		g2<<"set output 'output/eng_plot.pdf'";
+		g2<<"replot";
+		g2<<"set term pop";
+		
+		
+		Gnuplot g4("lines");
+			
+		g4.plot_x(this->get_vec("corr_eng"),"Correlation of eng per spin versus MC time");
+		
+		this->wait_for_key();	
+		}
+	catch (GnuplotException ge){
+        cout << ge.what() << endl;
+		}
+	}
+	
+void lattice::wait_for_key(){
+	#if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__TOS_WIN__)  // every keypress registered, also arrow keys
+    cout << endl << "Press any key to continue..." << endl;
+
+    FlushConsoleInputBuffer(GetStdHandle(STD_INPUT_HANDLE));
+    _getch();
+	#elif defined(unix) || defined(__unix) || defined(__unix__) || defined(__APPLE__)
+    cout << endl << "Press ENTER to continue..." << endl;
+
+    std::cin.clear();
+    std::cin.ignore(std::cin.rdbuf()->in_avail());
+    std::cin.get();
+	#endif
+    return;
 	}
