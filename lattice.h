@@ -13,21 +13,21 @@ class lattice{
 	private:
 		vector<short> spins;			// Spins contained in one dim vector
 		
-		vector<double> mag;			// Magnetization measurements
+		vector<double> mag;				// Magnetization measurements
 		
-		vector<double> eng;			// Energy measurements
+		vector<double> eng;				// Energy measurements
 		
-		vector<double> cov_mag; 	// Magnetic covariance function
+		vector<double> cov_mag; 		// Magnetic covariance function
 		
-		vector<double> corr_mag;	// Magnetic correlation function
+		vector<double> corr_mag;		// Magnetic correlation function
 		
-		vector<double> cov_eng; 	// Energy covariance function
+		vector<double> cov_eng; 		// Energy covariance function
 		
-		vector<double> corr_eng; 	// Energy correlation function
+		vector<double> corr_eng; 		// Energy correlation function
 		
-		double avg_mag;				// Average magnetization per spin
+		double avg_mag;					// Average magnetization per spin
 		
-		double avg_eng;				// Average energy per spin
+		double avg_eng;					// Average energy per spin
 		
 		int L;							// Length of axis		
 		
@@ -59,9 +59,9 @@ class lattice{
 		vector<double> boot_values;
 				
 		
-		string mode;		// metropolis or heat bath
+		string mode;					// metropolis or heat bath
 		
-		string output;		// choice of output
+		string output;					// choice of output
 		
 		/* pointer to the rng */
 		gsl_rng *rng;
