@@ -25,6 +25,10 @@ class lattice{
 		
 		vector<double> corr_eng; 		// Energy correlation function
 		
+		vector<double> cov_clu;			// Cluster size covariance function		
+		
+		vector<double> corr_clu;		// Cluster size correlation function
+		
 		double avg_mag;					// Average magnetization per spin
 		
 		double avg_eng;					// Average energy per spin
@@ -102,13 +106,20 @@ class lattice{
 		
 		void calc_eng_cov();
 		
+		void calc_clu_cov();
+		
 		void calc_mag_corr();
 		
 		void calc_eng_corr();
 		
+		void calc_clu_corr();
+		
+		
 		double calc_tau(const vector<double>& corr);
 		
 		double get_avg(const vector<double>& vec);
+		
+		double get_avg(const vector<int>& vec);		
 		
 		double get_std_err(const vector<double>& cov, const vector<double>& corr);
 		

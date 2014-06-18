@@ -388,7 +388,7 @@ void lattice::scan_t(){
 		appfile<<this-> get_spec_heat()<<" "<<this->get_spec_heat_err();
 		
 		if(mode == "wolff"){
-		appfile<<this->get_avg(cluster_sizes)<<" "<<this->get_std_err();		
+		appfile<<this->get_avg(cluster_sizes)<<" ";		
 		}
 		
 		appfile<<endl;
@@ -396,8 +396,7 @@ void lattice::scan_t(){
 		}
 	}
 
-template <typename T>
-double lattice::cov_func(int t_c, const vector<T>& y){		//compute covariance of a vector at time t_c
+double lattice::cov_func(int t_c, const vector<double>& y){		//compute covariance of a vector at time t_c
 	double sum1 = 0, sum2 = 0, sum3 = 0;
 	int size = int(y.size());
 	for(int i = 0; i < (size - t_c); i++){
@@ -410,13 +409,10 @@ double lattice::cov_func(int t_c, const vector<T>& y){		//compute covariance of 
 	return norm*(sum1 - norm * sum2 * sum3);
 	}
 
-template <typename T>
-vector<double> lattice::calc_cov_t(const vector<T>& vec){
-	vector<double> cov_t;
+void lattice::calc_cov_t(const vector<double>& vec, vector<double>& cov){
 	for(int t_c = 0; t_c<int(vec.size())/10; t_c++){
-		cov_t.push_back(cov_func(t_c,vec));
+		cov.push_back(cov_func(t_c,vec));
 		}
-	return cov_t;
 	}
 
 void lattice::calc_mag_cov(){
@@ -432,22 +428,6 @@ void lattice::calc_mag_corr(){
 	for(unsigned int i = 0; i<cov_mag.size(); i++){
 		corr_mag.push_back(cov_mag.at(i)/cov_mag.at(0));
 		}
-	}
-	
-template <typename T>
-vector<double> lattice::calc_corr(const vector<T>& vec){
-	vector<double> cov = this->calc_cov(vec);
-	vector<double> corr;
-	for(unsigned int i = 0; i<cov.size(); i++){
-		corr.push_back(cov.at(i)/double(cov.at(0)));		
-		}	
-	return corr;
-	}
-
-template <typename T>
-vector<double> lattice::calc_cov(const vector<T>& vec){
-	vector<double> cov;
-		
 	}
 
 void lattice::calc_eng_corr(){
@@ -470,6 +450,14 @@ double lattice::calc_tau(const vector<double>& corr){
 	}
 
 double lattice::get_avg(const vector<double>& vec){
+	double sum = 0;
+	for(unsigned int i = 0; i<vec.size(); i++ ){
+		sum+=vec.at(i);
+		}
+	return sum/double(vec.size());
+	}
+
+double lattice::get_avg(const vector<int>& vec){
 	double sum = 0;
 	for(unsigned int i = 0; i<vec.size(); i++ ){
 		sum+=vec.at(i);
@@ -645,6 +633,11 @@ void lattice::one_temp(){
 	tau_int = this->calc_tau(this->get_vec("corr_eng"));
 	
 	cout<<"The integrated autocorrelation time of the energy is: "<<tau_int<<endl;
+	
+	if(mode == "wolff"){
+		double avg_size = this->get_avg(cluster_sizes);
+		cout<<endl<<"The average cluster size is: "<<avg_size<<"("<<100*avg_size/double(V)<<"%)"<<endl;		
+		}	
 	
 	try
 	{
