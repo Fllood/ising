@@ -74,7 +74,7 @@ class lattice{
 		
 		double wolff_prob;
 		
-		vector<int> cluster_sizes;
+		vector<double> cluster_sizes;
 	
 	public:
 		

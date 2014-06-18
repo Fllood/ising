@@ -63,9 +63,6 @@ lattice::lattice(int length, int dim, double Bfield, int iterations, double Temp
 	
 	gsl_rng_set(rng,seed);
 	
-		
-	
-	
 	}
 
 void lattice::update_lookups(){
@@ -82,6 +79,9 @@ void lattice::update_lookups(){
 	
 	cov_eng.clear();
 	corr_eng.clear();
+	
+	cov_clu.clear();
+	corr_clu.clear();
 	
 	boot_samples.clear();
 	boot_values.clear();
@@ -388,8 +388,11 @@ void lattice::scan_t(){
 		appfile<<this-> get_spec_heat()<<" "<<this->get_spec_heat_err();
 		
 		if(mode == "wolff"){
-		appfile<<this->get_avg(cluster_sizes)<<" ";		
-		}
+			appfile<<this->get_avg(cluster_sizes)<<" ";
+			this->calc_clu_corr();
+			double err = this->get_std_err(this->get_vec("cov_clu"),this->get_vec("corr_clu"));
+			appfile<<err;		
+			}
 		
 		appfile<<endl;
 		appfile.close();
@@ -423,6 +426,10 @@ void lattice::calc_eng_cov(){
 	calc_cov_t(eng,cov_eng);
 	}
 
+void lattice::calc_clu_cov(){
+	calc_cov_t(cluster_sizes,cov_clu);
+	}
+
 void lattice::calc_mag_corr(){
 	this->calc_mag_cov();
 	for(unsigned int i = 0; i<cov_mag.size(); i++){
@@ -434,6 +441,13 @@ void lattice::calc_eng_corr(){
 	this->calc_eng_cov();
 	for(unsigned int i = 0; i<cov_eng.size(); i++){
 		corr_eng.push_back(cov_eng.at(i)/cov_eng.at(0));
+		}
+	}
+
+void lattice::calc_clu_corr(){
+	this->calc_clu_cov();
+	for(unsigned int i = 0; i<cov_clu.size(); i++){
+		corr_clu.push_back(cov_clu.at(i)/cov_clu.at(0));
 		}
 	}
 
@@ -484,8 +498,10 @@ vector<double> lattice::get_vec(string choice){
 	else if(choice == "eng") return eng;
 	else if(choice == "corr_mag") return corr_mag;
 	else if(choice == "corr_eng") return corr_eng;
+	else if(choice == "corr_clu") return corr_clu;
 	else if(choice == "cov_mag") return cov_mag;
 	else if(choice == "cov_eng") return cov_eng;
+	else if(choice == "cov_clu") return cov_clu;
 	
 	vector<double> def_vec;
 	return def_vec;
@@ -636,7 +652,10 @@ void lattice::one_temp(){
 	
 	if(mode == "wolff"){
 		double avg_size = this->get_avg(cluster_sizes);
-		cout<<endl<<"The average cluster size is: "<<avg_size<<"("<<100*avg_size/double(V)<<"%)"<<endl;		
+		this->calc_clu_corr();
+		double err = this->get_std_err(this->get_vec("cov_clu"),this->get_vec("corr_clu"));
+		double percent = 100*avg_size/double(V);
+		cout<<endl<<"The average cluster size is: "<<avg_size<<"(+/-)"<<err<<" ("<<percent<<"% of lattice)"<<endl;		
 		}	
 	
 	try
