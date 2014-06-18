@@ -25,8 +25,6 @@ lattice::lattice(int length, int dim, double Bfield, int iterations, double Temp
 	avg_mag=0;
 	avg_eng=0;
 	
-	avg_cluster_size = 0;
-	
 	t_eq = eq_time;
 	
 	T = Temp;
@@ -50,6 +48,8 @@ lattice::lattice(int length, int dim, double Bfield, int iterations, double Temp
 	eng.reserve(iter);
 	
 	boot_samples.reserve(iter);
+	
+	cluster_sizes.reserve(iter);
 	
 	boot_values.reserve(M);
 	
@@ -86,10 +86,10 @@ void lattice::update_lookups(){
 	boot_samples.clear();
 	boot_values.clear();
 	
+	cluster_sizes.clear();
+	
 	avg_mag = 0;
 	avg_eng = 0;
-	
-	avg_cluster_size = 0;
 	
 	wolff_prob = 1 - exp(-2*b); 
 	
@@ -211,14 +211,19 @@ void lattice::sweep_heat(){
 void lattice::sweep_wolff(){
 	int rs,s,nn;
 	double rho;
-	vector<int> cluster, added_spins, current_spins;
+	vector<int> added_spins, current_spins;
 	
 	rs = floor(V * gsl_rng_uniform(rng));			// choose random seed spin
 	
-	cluster.push_back(rs);							// add seed to cluster
-	added_spins.push_back(rs);
+	int old_value = spins.at(rs);
+	int new_value = -old_value;
+	
+	spins.at(rs) = new_value;		// flip seed spin
+	added_spins.push_back(rs);		
 	
 	bool flag = true;
+	
+	int cluster_size = 1;
 	
 	while(flag == true){
 		
@@ -235,33 +240,31 @@ void lattice::sweep_wolff(){
 				int div = V/(pow(L,i));
 				
 				if((nn=s+div)>=V)nn -= V;			// helical boundary conditions
-				if(!this->in_vec(cluster,nn) && spins[nn]==spins[s]){
+				if( spins[nn]==old_value){
 					rho = gsl_rng_uniform(rng);
 					if(rho <= wolff_prob){
-						cluster.push_back(nn);
+						spins.at(nn) = new_value;	// flip spin
 						added_spins.push_back(nn);
 						flag = true;
+						cluster_size++;
 						}
 					}
 				
 				if((nn=s-div)<0)nn += V;
-				if(!this->in_vec(cluster,nn) && spins[nn]==spins[s] ){
+				if(spins[nn]==old_value ){
 					rho = gsl_rng_uniform(rng);
 					if(rho <= wolff_prob){
-						cluster.push_back(nn);
+						spins.at(nn) = new_value;	// flip spin
 						added_spins.push_back(nn);
 						flag = true;
+						cluster_size++;
 						}
 					}
 				
 				}
 			}
 		}
-	avg_cluster_size += cluster.size()/double(iter);
-	//cout<<"cluster size: "<<cluster.size()<<endl;
-	for(unsigned int k = 0; k<cluster.size(); k++){		// flip cluster
-		spins.at(cluster.at(k)) *= -1; 
-		}
+	cluster_sizes.push_back(cluster_size);		// save cluster size
 	}
 
 void lattice::run(){
@@ -321,10 +324,6 @@ void lattice::run(){
 	
 	file.close();
 	
-	if(mode == "wolff"){
-		cout<<"Average cluster size: "<<avg_cluster_size<<endl;
-		}	
-	
 	}
 
 void lattice::scan_t(){
@@ -361,8 +360,12 @@ void lattice::scan_t(){
 	if(!fexists(filename)){
 		file.open(filename.c_str());
 		}
-	file<<"# Lattice: "<<L<<"^"<<d<<" B = "<<B<<" iterations = "<<iter<<endl;
-	file<<"# T mag magerr sus suserr eng engerr heat heaterr"<<endl;
+	file<<"# Lattice: "<<L<<"^"<<d<<" B = "<<B<<" iterations = "<<iter<<" Algorithm: "<<mode<<endl;
+	file<<"# T mag magerr sus suserr eng engerr heat heaterr";
+	if(mode == "wolff"){
+		file<<"clustersize clustersizeerr";		
+		}
+	file<<endl;
 	file.close();
 	for (unsigned int i = 0; i<t_vec.size(); i++){
 		ofstream appfile;							// open(ios::app) files
@@ -382,12 +385,19 @@ void lattice::scan_t(){
 		appfile<<this->get_val("avg_eng")<<" ";
 		this->calc_eng_corr();
 		appfile<<this->get_std_err(this->get_vec("cov_eng"),this->get_vec("corr_eng"))<<" ";
-		appfile<<this-> get_spec_heat()<<" "<<this->get_spec_heat_err()<<endl;
+		appfile<<this-> get_spec_heat()<<" "<<this->get_spec_heat_err();
+		
+		if(mode == "wolff"){
+		appfile<<this->get_avg(cluster_sizes)<<" "<<this->get_std_err();		
+		}
+		
+		appfile<<endl;
 		appfile.close();
 		}
 	}
 
-double lattice::cov_func(int t_c, const vector<double>& y){		//compute covariance of a vector at time t_c
+template <typename T>
+double lattice::cov_func(int t_c, const vector<T>& y){		//compute covariance of a vector at time t_c
 	double sum1 = 0, sum2 = 0, sum3 = 0;
 	int size = int(y.size());
 	for(int i = 0; i < (size - t_c); i++){
@@ -400,10 +410,13 @@ double lattice::cov_func(int t_c, const vector<double>& y){		//compute covarianc
 	return norm*(sum1 - norm * sum2 * sum3);
 	}
 
-void lattice::calc_cov_t(const vector<double>& vec, vector<double>& cov){
+template <typename T>
+vector<double> lattice::calc_cov_t(const vector<T>& vec){
+	vector<double> cov_t;
 	for(int t_c = 0; t_c<int(vec.size())/10; t_c++){
-		cov.push_back(cov_func(t_c,vec));
+		cov_t.push_back(cov_func(t_c,vec));
 		}
+	return cov_t;
 	}
 
 void lattice::calc_mag_cov(){
@@ -419,6 +432,22 @@ void lattice::calc_mag_corr(){
 	for(unsigned int i = 0; i<cov_mag.size(); i++){
 		corr_mag.push_back(cov_mag.at(i)/cov_mag.at(0));
 		}
+	}
+	
+template <typename T>
+vector<double> lattice::calc_corr(const vector<T>& vec){
+	vector<double> cov = this->calc_cov(vec);
+	vector<double> corr;
+	for(unsigned int i = 0; i<cov.size(); i++){
+		corr.push_back(cov.at(i)/double(cov.at(0)));		
+		}	
+	return corr;
+	}
+
+template <typename T>
+vector<double> lattice::calc_cov(const vector<T>& vec){
+	vector<double> cov;
+		
 	}
 
 void lattice::calc_eng_corr(){
