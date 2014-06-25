@@ -61,6 +61,13 @@ class lattice{
 		vector<double> boot_samples;
 		
 		vector<double> boot_values;
+		
+		vector<double> corr_length_func;	// Correlation length function
+		
+		double  s_i_avg;	// Averages for correlation length		
+		vector<double> s_ij_avg, s_j_avg;
+		
+		int s_cl;								// Seed spin for correlation length
 				
 		
 		string mode;					// metropolis or heat bath
@@ -158,6 +165,12 @@ class lattice{
 		void one_temp();
 		
 		void wait_for_key();
+		
+		void calc_corr_length_avg();
+		
+		void calc_corr_length_func();		
+		
+		double dist(int i, int j);
 		
 	};
 

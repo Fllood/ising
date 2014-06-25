@@ -53,6 +53,22 @@ lattice::lattice(int length, int dim, double Bfield, int iterations, double Temp
 	
 	boot_values.reserve(M);
 	
+	corr_length_func.reserve(V);
+	
+	s_ij_avg.reserve(V);
+	s_j_avg.reserve(V);
+	s_i_avg = 0;	
+	
+	for(int i = 0; i < V; i++) {
+		corr_length_func.push_back(0);	// fill with zeros
+		s_ij_avg.push_back(0);
+		s_j_avg.push_back(0);
+		
+		}
+	
+	
+	
+	
 	this->update_lookups();	
 	
 	// gsl function to initialize the rng
@@ -62,6 +78,10 @@ lattice::lattice(int length, int dim, double Bfield, int iterations, double Temp
 	long seed = time(NULL);	
 	
 	gsl_rng_set(rng,seed);
+	
+	s_cl = floor(V * gsl_rng_uniform(rng));	
+	
+		
 	
 	}
 
@@ -87,6 +107,16 @@ void lattice::update_lookups(){
 	boot_values.clear();
 	
 	cluster_sizes.clear();
+	
+	corr_length_func.clear();
+	for(int i = 0; i < V; i++) {
+		corr_length_func.push_back(0);	// fill with zeros
+		s_ij_avg.push_back(0);
+		s_j_avg.push_back(0);
+		
+		}
+	
+	s_i_avg = 0;		
 	
 	avg_mag = 0;
 	avg_eng = 0;
@@ -363,8 +393,9 @@ void lattice::scan_t(){
 	file<<"# Lattice: "<<L<<"^"<<d<<" B = "<<B<<" iterations = "<<iter<<" Algorithm: "<<mode<<endl;
 	file<<"# T mag magerr sus suserr eng engerr heat heaterr";
 	if(mode == "wolff"){
-		file<<"clustersize clustersizeerr";		
+		file<<" clustersize clustersizeerr";		
 		}
+	file<<" engcorrtime magcorrtime";
 	file<<endl;
 	file.close();
 	for (unsigned int i = 0; i<t_vec.size(); i++){
@@ -386,14 +417,20 @@ void lattice::scan_t(){
 		this->calc_eng_corr();
 		appfile<<this->get_std_err(this->get_vec("cov_eng"),this->get_vec("corr_eng"))<<" ";
 		appfile<<this-> get_spec_heat()<<" "<<this->get_spec_heat_err();
-		
+		double avg_clu_size = 0;
 		if(mode == "wolff"){
-			appfile<<this->get_avg(cluster_sizes)<<" ";
+			avg_clu_size = this->get_avg(cluster_sizes);
+			appfile<<" "<<avg_clu_size<<" ";
 			this->calc_clu_corr();
 			double err = this->get_std_err(this->get_vec("cov_clu"),this->get_vec("corr_clu"));
 			appfile<<err;		
 			}
-		
+		double tau_int = this->calc_tau(this->get_vec("corr_mag"));
+		if(mode == "wolff")appfile<<" "<<tau_int*avg_clu_size/double(V)<<" ";
+		else appfile<<" "<<tau_int<<" ";
+		tau_int = this->calc_tau(this->get_vec("corr_eng"));
+		if(mode == "wolff")appfile<<" "<<tau_int*avg_clu_size/double(V)<<" ";
+		else appfile<<" "<<tau_int<<" ";
 		appfile<<endl;
 		appfile.close();
 		}
@@ -461,6 +498,21 @@ double lattice::calc_tau(const vector<double>& corr){
 		t++;		
 		}	
 	return tau;
+	}
+
+void lattice::calc_corr_length_avg(){
+	int i = s_cl;
+	s_i_avg += spins[i]/double(iter);
+	for(int j = 0; j < V; j++){
+		s_ij_avg.at(j) += spins[i]*spins[j]/double(iter);
+		s_j_avg.at(j) += spins[j]/double(iter);		
+		}	
+	}
+
+void lattice::calc_corr_length_func(){
+	for(int j = 0; j < V; j++){
+		corr_length_func.push_back(s_ij_avg.at(j)-s_i_avg*s_j_avg.at(j));		
+		}	
 	}
 
 double lattice::get_avg(const vector<double>& vec){
@@ -710,3 +762,30 @@ void lattice::wait_for_key(){
 	#endif
     return;
 	}
+
+double lattice::dist(int i, int j){
+	vector<int> r_i, r_j;
+	int i_c = i, j_c = j;
+	for(int l = 1; l <= d; l++){
+		int div = V/(pow(L,l));
+		int count = 0;
+		while(i_c > div){
+			i_c -= div;
+			count++;			
+			}
+		r_i.push_back(count);
+		count = 0;
+		while(j_c >= div){
+			j_c -= div;
+			count++;			
+			}
+		r_j.push_back(count);
+		}
+	int sum = 0;
+	for(unsigned int k = 0; k<r_i.size(); k++){
+		sum += pow(r_i.at(k)-r_j.at(k),2);		
+		}
+		
+	return sqrt(dist);
+	}
+	
