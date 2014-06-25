@@ -785,7 +785,7 @@ double lattice::dist(int i, int j){
 	for(unsigned int k = 0; k<r_i.size(); k++){
 		sum += pow(r_i.at(k)-r_j.at(k),2);		
 		}
-		
+	// check if distance is the shortest possible	
 	return sqrt(dist);
 	}
 	
