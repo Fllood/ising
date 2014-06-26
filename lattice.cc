@@ -432,7 +432,7 @@ double lattice::calc_tau(const vector<double>& corr){
 	double tau = 0.5;
 	int flag = 0;
 	int t = 1;
-	while(flag == 0){
+	while(flag == 0 && t < int(corr.size()-1)){
 		tau += corr.at(t);
 		if(corr.at(t)<0) flag = 1;
 		t++;		
