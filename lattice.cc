@@ -762,7 +762,7 @@ void lattice::wait_for_key(){
 	#endif
     return;
 	}
-
+/*
 double lattice::dist(int i, int j){
 	vector<int> r_i, r_j;
 	int i_c = i, j_c = j;
@@ -786,6 +786,33 @@ double lattice::dist(int i, int j){
 		sum += pow(r_i.at(k)-r_j.at(k),2);		
 		}
 	// check if distance is the shortest possible	
-	return sqrt(dist);
+	return sqrt(sum);
+	}
+*/
+
+double lattice::dist(int i, int j){
+	int p;
+	if(i >= V) i %= V;
+	if(j >= V) j %= V;
+	if(i<j) p = j-i;
+	else p = i-j; 
+	int sum = 0;
+	for(int dim = 0; dim <= d; dim++){
+		int div = V/(pow(L,dim));
+		//cout<<endl<<" div: "<<div<<endl;
+		int count = 0;
+		while(p >= div){
+			p -= div;
+			//cout<<endl<<" p: "<<p<<endl;
+			count++;
+			}
+		//cout<<endl<<" count: "<<count<<endl;
+		if(double(count) > div*L/sqrt(2)) {
+			sum += pow((div*L - count),2);
+			}
+		else sum += pow(count,2);
+		//cout<<endl<<" sum: "<<sum<<endl;
+		}
+	return sqrt(sum);
 	}
 	
