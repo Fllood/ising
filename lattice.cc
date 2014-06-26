@@ -25,8 +25,6 @@ lattice::lattice(int length, int dim, double Bfield, int iterations, double Temp
 	avg_mag=0;
 	avg_eng=0;
 	
-	avg_cluster_size = 0;
-	
 	t_eq = eq_time;
 	
 	T = Temp;
@@ -51,7 +49,25 @@ lattice::lattice(int length, int dim, double Bfield, int iterations, double Temp
 	
 	boot_samples.reserve(iter);
 	
+	cluster_sizes.reserve(iter);
+	
 	boot_values.reserve(M);
+	
+	corr_length_func.reserve(V);
+	
+	s_ij_avg.reserve(V);
+	s_j_avg.reserve(V);
+	s_i_avg = 0;	
+	
+	for(int i = 0; i < V; i++) {
+		corr_length_func.push_back(0);	// fill with zeros
+		s_ij_avg.push_back(0);
+		s_j_avg.push_back(0);
+		
+		}
+	
+	
+	
 	
 	this->update_lookups();	
 	
@@ -63,8 +79,9 @@ lattice::lattice(int length, int dim, double Bfield, int iterations, double Temp
 	
 	gsl_rng_set(rng,seed);
 	
-		
+	s_cl = floor(V * gsl_rng_uniform(rng));	
 	
+		
 	
 	}
 
@@ -83,13 +100,26 @@ void lattice::update_lookups(){
 	cov_eng.clear();
 	corr_eng.clear();
 	
+	cov_clu.clear();
+	corr_clu.clear();
+	
 	boot_samples.clear();
 	boot_values.clear();
 	
+	cluster_sizes.clear();
+	
+	corr_length_func.clear();
+	for(int i = 0; i < V; i++) {
+		corr_length_func.push_back(0);	// fill with zeros
+		s_ij_avg.push_back(0);
+		s_j_avg.push_back(0);
+		
+		}
+	
+	s_i_avg = 0;		
+	
 	avg_mag = 0;
 	avg_eng = 0;
-	
-	avg_cluster_size = 0;
 	
 	wolff_prob = 1 - exp(-2*b); 
 	
@@ -211,14 +241,19 @@ void lattice::sweep_heat(){
 void lattice::sweep_wolff(){
 	int rs,s,nn;
 	double rho;
-	vector<int> cluster, added_spins, current_spins;
+	vector<int> added_spins, current_spins;
 	
 	rs = floor(V * gsl_rng_uniform(rng));			// choose random seed spin
 	
-	cluster.push_back(rs);							// add seed to cluster
-	added_spins.push_back(rs);
+	int old_value = spins.at(rs);
+	int new_value = -old_value;
+	
+	spins.at(rs) = new_value;		// flip seed spin
+	added_spins.push_back(rs);		
 	
 	bool flag = true;
+	
+	int cluster_size = 1;
 	
 	while(flag == true){
 		
@@ -235,33 +270,31 @@ void lattice::sweep_wolff(){
 				int div = V/(pow(L,i));
 				
 				if((nn=s+div)>=V)nn -= V;			// helical boundary conditions
-				if(!this->in_vec(cluster,nn) && spins[nn]==spins[s]){
+				if( spins[nn]==old_value){
 					rho = gsl_rng_uniform(rng);
 					if(rho <= wolff_prob){
-						cluster.push_back(nn);
+						spins.at(nn) = new_value;	// flip spin
 						added_spins.push_back(nn);
 						flag = true;
+						cluster_size++;
 						}
 					}
 				
 				if((nn=s-div)<0)nn += V;
-				if(!this->in_vec(cluster,nn) && spins[nn]==spins[s] ){
+				if(spins[nn]==old_value ){
 					rho = gsl_rng_uniform(rng);
 					if(rho <= wolff_prob){
-						cluster.push_back(nn);
+						spins.at(nn) = new_value;	// flip spin
 						added_spins.push_back(nn);
 						flag = true;
+						cluster_size++;
 						}
 					}
 				
 				}
 			}
 		}
-	avg_cluster_size += cluster.size()/double(iter);
-	//cout<<"cluster size: "<<cluster.size()<<endl;
-	for(unsigned int k = 0; k<cluster.size(); k++){		// flip cluster
-		spins.at(cluster.at(k)) *= -1; 
-		}
+	cluster_sizes.push_back(cluster_size);		// save cluster size
 	}
 
 void lattice::run(){
@@ -321,10 +354,6 @@ void lattice::run(){
 	
 	file.close();
 	
-	if(mode == "wolff"){
-		cout<<"Average cluster size: "<<avg_cluster_size<<endl;
-		}	
-	
 	}
 
 void lattice::scan_t(){
@@ -361,8 +390,13 @@ void lattice::scan_t(){
 	if(!fexists(filename)){
 		file.open(filename.c_str());
 		}
-	file<<"# Lattice: "<<L<<"^"<<d<<" B = "<<B<<" iterations = "<<iter<<endl;
-	file<<"# T mag magerr sus suserr eng engerr heat heaterr"<<endl;
+	file<<"# Lattice: "<<L<<"^"<<d<<" B = "<<B<<" iterations = "<<iter<<" Algorithm: "<<mode<<endl;
+	file<<"# T mag magerr sus suserr eng engerr heat heaterr";
+	if(mode == "wolff"){
+		file<<" clustersize clustersizeerr";		
+		}
+	file<<" engcorrtime magcorrtime";
+	file<<endl;
 	file.close();
 	for (unsigned int i = 0; i<t_vec.size(); i++){
 		ofstream appfile;							// open(ios::app) files
@@ -382,7 +416,22 @@ void lattice::scan_t(){
 		appfile<<this->get_val("avg_eng")<<" ";
 		this->calc_eng_corr();
 		appfile<<this->get_std_err(this->get_vec("cov_eng"),this->get_vec("corr_eng"))<<" ";
-		appfile<<this-> get_spec_heat()<<" "<<this->get_spec_heat_err()<<endl;
+		appfile<<this-> get_spec_heat()<<" "<<this->get_spec_heat_err();
+		double avg_clu_size = 0;
+		if(mode == "wolff"){
+			avg_clu_size = this->get_avg(cluster_sizes);
+			appfile<<" "<<avg_clu_size<<" ";
+			this->calc_clu_corr();
+			double err = this->get_std_err(this->get_vec("cov_clu"),this->get_vec("corr_clu"));
+			appfile<<err;		
+			}
+		double tau_int = this->calc_tau(this->get_vec("corr_mag"));
+		if(mode == "wolff")appfile<<" "<<tau_int*avg_clu_size/double(V)<<" ";
+		else appfile<<" "<<tau_int<<" ";
+		tau_int = this->calc_tau(this->get_vec("corr_eng"));
+		if(mode == "wolff")appfile<<" "<<tau_int*avg_clu_size/double(V)<<" ";
+		else appfile<<" "<<tau_int<<" ";
+		appfile<<endl;
 		appfile.close();
 		}
 	}
@@ -414,6 +463,10 @@ void lattice::calc_eng_cov(){
 	calc_cov_t(eng,cov_eng);
 	}
 
+void lattice::calc_clu_cov(){
+	calc_cov_t(cluster_sizes,cov_clu);
+	}
+
 void lattice::calc_mag_corr(){
 	this->calc_mag_cov();
 	for(unsigned int i = 0; i<cov_mag.size(); i++){
@@ -425,6 +478,13 @@ void lattice::calc_eng_corr(){
 	this->calc_eng_cov();
 	for(unsigned int i = 0; i<cov_eng.size(); i++){
 		corr_eng.push_back(cov_eng.at(i)/cov_eng.at(0));
+		}
+	}
+
+void lattice::calc_clu_corr(){
+	this->calc_clu_cov();
+	for(unsigned int i = 0; i<cov_clu.size(); i++){
+		corr_clu.push_back(cov_clu.at(i)/cov_clu.at(0));
 		}
 	}
 
@@ -440,7 +500,30 @@ double lattice::calc_tau(const vector<double>& corr){
 	return tau;
 	}
 
+void lattice::calc_corr_length_avg(){
+	int i = s_cl;
+	s_i_avg += spins[i]/double(iter);
+	for(int j = 0; j < V; j++){
+		s_ij_avg.at(j) += spins[i]*spins[j]/double(iter);
+		s_j_avg.at(j) += spins[j]/double(iter);		
+		}	
+	}
+
+void lattice::calc_corr_length_func(){
+	for(int j = 0; j < V; j++){
+		corr_length_func.push_back(s_ij_avg.at(j)-s_i_avg*s_j_avg.at(j));		
+		}	
+	}
+
 double lattice::get_avg(const vector<double>& vec){
+	double sum = 0;
+	for(unsigned int i = 0; i<vec.size(); i++ ){
+		sum+=vec.at(i);
+		}
+	return sum/double(vec.size());
+	}
+
+double lattice::get_avg(const vector<int>& vec){
 	double sum = 0;
 	for(unsigned int i = 0; i<vec.size(); i++ ){
 		sum+=vec.at(i);
@@ -467,8 +550,10 @@ vector<double> lattice::get_vec(string choice){
 	else if(choice == "eng") return eng;
 	else if(choice == "corr_mag") return corr_mag;
 	else if(choice == "corr_eng") return corr_eng;
+	else if(choice == "corr_clu") return corr_clu;
 	else if(choice == "cov_mag") return cov_mag;
 	else if(choice == "cov_eng") return cov_eng;
+	else if(choice == "cov_clu") return cov_clu;
 	
 	vector<double> def_vec;
 	return def_vec;
@@ -617,6 +702,14 @@ void lattice::one_temp(){
 	
 	cout<<"The integrated autocorrelation time of the energy is: "<<tau_int<<endl;
 	
+	if(mode == "wolff"){
+		double avg_size = this->get_avg(cluster_sizes);
+		this->calc_clu_corr();
+		double err = this->get_std_err(this->get_vec("cov_clu"),this->get_vec("corr_clu"));
+		double percent = 100*avg_size/double(V);
+		cout<<endl<<"The average cluster size is: "<<avg_size<<"(+/-)"<<err<<" ("<<percent<<"% of lattice)"<<endl;		
+		}	
+	
 	try
 	{
 		Gnuplot g1("lines");
@@ -669,3 +762,30 @@ void lattice::wait_for_key(){
 	#endif
     return;
 	}
+
+double lattice::dist(int i, int j){
+	vector<int> r_i, r_j;
+	int i_c = i, j_c = j;
+	for(int l = 1; l <= d; l++){
+		int div = V/(pow(L,l));
+		int count = 0;
+		while(i_c > div){
+			i_c -= div;
+			count++;			
+			}
+		r_i.push_back(count);
+		count = 0;
+		while(j_c >= div){
+			j_c -= div;
+			count++;			
+			}
+		r_j.push_back(count);
+		}
+	int sum = 0;
+	for(unsigned int k = 0; k<r_i.size(); k++){
+		sum += pow(r_i.at(k)-r_j.at(k),2);		
+		}
+	// check if distance is the shortest possible	
+	return sqrt(dist);
+	}
+	

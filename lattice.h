@@ -25,6 +25,10 @@ class lattice{
 		
 		vector<double> corr_eng; 		// Energy correlation function
 		
+		vector<double> cov_clu;			// Cluster size covariance function		
+		
+		vector<double> corr_clu;		// Cluster size correlation function
+		
 		double avg_mag;					// Average magnetization per spin
 		
 		double avg_eng;					// Average energy per spin
@@ -57,6 +61,13 @@ class lattice{
 		vector<double> boot_samples;
 		
 		vector<double> boot_values;
+		
+		vector<double> corr_length_func;	// Correlation length function
+		
+		double  s_i_avg;	// Averages for correlation length		
+		vector<double> s_ij_avg, s_j_avg;
+		
+		int s_cl;								// Seed spin for correlation length
 				
 		
 		string mode;					// metropolis or heat bath
@@ -70,7 +81,7 @@ class lattice{
 		
 		double wolff_prob;
 		
-		double avg_cluster_size;
+		vector<double> cluster_sizes;
 	
 	public:
 		
@@ -102,13 +113,20 @@ class lattice{
 		
 		void calc_eng_cov();
 		
+		void calc_clu_cov();
+		
 		void calc_mag_corr();
 		
 		void calc_eng_corr();
 		
+		void calc_clu_corr();
+		
+		
 		double calc_tau(const vector<double>& corr);
 		
 		double get_avg(const vector<double>& vec);
+		
+		double get_avg(const vector<int>& vec);		
 		
 		double get_std_err(const vector<double>& cov, const vector<double>& corr);
 		
@@ -147,6 +165,12 @@ class lattice{
 		void one_temp();
 		
 		void wait_for_key();
+		
+		void calc_corr_length_avg();
+		
+		void calc_corr_length_func();		
+		
+		double dist(int i, int j);
 		
 	};
 
