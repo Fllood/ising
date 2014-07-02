@@ -32,8 +32,7 @@ int main(int argc, char *argv[])
 	
 	
 	if(Temp){		//skip when Temp = 0
-		//l1.one_temp();
-		cout<<"distance: "<<l1.dist(0,15)<<" "<<l1.dist(8,11)<<" "<<l1.dist(12,15)<<endl;
+		l1.one_temp();
 	}
 	else{
 		l1.scan_t();

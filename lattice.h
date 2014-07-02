@@ -64,6 +64,9 @@ class lattice{
 		
 		vector<double> corr_length_func;	// Correlation length function
 		
+		vector<double> r_values;			// corresponding r values
+				
+		
 		double  s_i_avg;	// Averages for correlation length		
 		vector<double> s_ij_avg, s_j_avg;
 		
@@ -82,6 +85,8 @@ class lattice{
 		double wolff_prob;
 		
 		vector<double> cluster_sizes;
+		
+		
 	
 	public:
 		

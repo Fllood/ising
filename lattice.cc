@@ -53,7 +53,6 @@ lattice::lattice(int length, int dim, double Bfield, int iterations, double Temp
 	
 	boot_values.reserve(M);
 	
-	corr_length_func.reserve(V);
 	
 	s_ij_avg.reserve(V);
 	s_j_avg.reserve(V);
@@ -109,6 +108,8 @@ void lattice::update_lookups(){
 	cluster_sizes.clear();
 	
 	corr_length_func.clear();
+	r_values.clear();
+	
 	for(int i = 0; i < V; i++) {
 		corr_length_func.push_back(0);	// fill with zeros
 		s_ij_avg.push_back(0);
@@ -321,6 +322,9 @@ void lattice::run(){
 		else if(mode =="wolff") this->sweep_wolff();
 		else  this->sweep_met();
 		
+		// Calculation of averages
+		this->calc_corr_length_avg();		
+		
 		magn = this->get_mag();
 
 		engy = this->get_eng();
@@ -510,9 +514,38 @@ void lattice::calc_corr_length_avg(){
 	}
 
 void lattice::calc_corr_length_func(){
-	for(int j = 0; j < V; j++){
-		corr_length_func.push_back(s_ij_avg.at(j)-s_i_avg*s_j_avg.at(j));		
+	double r = 0;
+	int count = 1;
+	int flag = 0;
+	int i = s_cl;
+	while(r<= (L-1)/sqrt(2)){
+		
+		if(flag == 0) {
+			r = count;
+			flag = 1;			
+			}
+		else{
+			r = count * sqrt(2);
+			flag = 0;
+			count++;			
+			}	
+		int n_r = 0;
+		double sum = 0;
+		for(int j = 0; j<V; j++){
+			double distance = dist(i,j);
+			
+			if(fabs(r-distance) <= 0.01){
+				n_r++;
+				sum += s_ij_avg.at(j)-s_i_avg*s_j_avg.at(j);				
+				}			
 		}	
+		sum /= double(n_r);
+		cout<<"sum = "<<sum<<endl;
+		r_values.push_back(r);
+		corr_length_func.push_back(sum);
+		
+		}
+	
 	}
 
 double lattice::get_avg(const vector<double>& vec){
@@ -672,6 +705,23 @@ void lattice::one_temp(){
 	
 	this->run();
 	
+	// fill vectors with G(r) and corresponding r values
+	this->calc_corr_length_func();
+	
+	//write to file:
+	ofstream file;
+	string filename ("data/spatial_corr_");
+	filename.append(get_time_str());
+	filename.append(".dat");
+	file.open(filename.c_str());
+	file<<"# Lattice: "<<L<<"^"<<d<<" B = "<<B<<" iterations = "<<iter<<" Algorithm: "<<mode<<endl;
+	file<<"# radius correlation"<<endl;
+	file.precision(15);
+	for(unsigned int i = 0; i < r_values.size(); i++ ){
+		file<<r_values.at(i)<<" "<<corr_length_func.at(i)<<endl;		
+		cout<<r_values.at(i)<<" "<<corr_length_func.at(i)<<endl;	
+		}
+	file.close();
 	
 	// Magnetization measurement
 	cout<<endl<<"avg mag: "<<this->get_val("avg_mag");	
@@ -797,22 +847,15 @@ double lattice::dist(int i, int j){
 	if(i<j) p = j-i;
 	else p = i-j; 
 	int sum = 0;
-	for(int dim = 0; dim <= d; dim++){
-		int div = V/(pow(L,dim));
-		//cout<<endl<<" div: "<<div<<endl;
-		int count = 0;
-		while(p >= div){
-			p -= div;
-			//cout<<endl<<" p: "<<p<<endl;
-			count++;
-			}
-		//cout<<endl<<" count: "<<count<<endl;
-		if(double(count) > div*L/sqrt(2)) {
-			sum += pow((div*L - count),2);
-			}
-		else sum += pow(count,2);
-		//cout<<endl<<" sum: "<<sum<<endl;
-		}
+	int rest = p % L;
+	p -= rest;
+	int taxlen = rest;
+	if (rest >= (L-1)/sqrt(2)) taxlen = L - rest;
+	sum += pow(taxlen,2);
+	rest = p / L;
+	taxlen = rest;
+	if(rest >= (L-1)/sqrt(2)) taxlen = L -rest;
+	sum += pow(taxlen,2);		
 	return sqrt(sum);
 	}
 	
