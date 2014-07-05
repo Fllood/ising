@@ -1,9 +1,9 @@
 # no files ending with ~
 *~
 .gitignore
-*.dat
+
 *.pdf
 
-/data
+
 
 *_ex
