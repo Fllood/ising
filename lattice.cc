@@ -59,7 +59,6 @@ lattice::lattice(int length, int dim, double Bfield, int iterations, double Temp
 	s_i_avg = 0;	
 	
 	for(int i = 0; i < V; i++) {
-		corr_length_func.push_back(0);	// fill with zeros
 		s_ij_avg.push_back(0);
 		s_j_avg.push_back(0);
 		
@@ -111,7 +110,6 @@ void lattice::update_lookups(){
 	r_values.clear();
 	
 	for(int i = 0; i < V; i++) {
-		corr_length_func.push_back(0);	// fill with zeros
 		s_ij_avg.push_back(0);
 		s_j_avg.push_back(0);
 		
@@ -514,34 +512,25 @@ void lattice::calc_corr_length_avg(){
 	}
 
 void lattice::calc_corr_length_func(){
-	double r = 0;
-	int count = 1;
-	int flag = 0;
 	int i = s_cl;
-	while(r<= (L-1)/sqrt(2)){
-		
-		if(flag == 0) {
-			r = count;
-			flag = 1;			
-			}
-		else{
-			r = count * sqrt(2);
-			flag = 0;
-			count++;			
-			}	
+	for(int j = 0; j<V; j++){
+		double r = dist(i,j);
+		if(find(r_values.begin(), r_values.end(), r)==r_values.end())r_values.push_back(r);
+	}
+	sort(r_values.begin(),r_values.end());
+	for(unsigned int k = 0; k<r_values.size(); k++){
 		int n_r = 0;
 		double sum = 0;
 		for(int j = 0; j<V; j++){
 			double distance = dist(i,j);
 			
-			if(fabs(r-distance) <= 0.01){
+			if(r_values.at(k) == distance){
 				n_r++;
 				sum += s_ij_avg.at(j)-s_i_avg*s_j_avg.at(j);				
 				}			
 		}	
 		sum /= double(n_r);
-		cout<<"sum = "<<sum<<endl;
-		r_values.push_back(r);
+		
 		corr_length_func.push_back(sum);
 		
 		}
@@ -718,8 +707,7 @@ void lattice::one_temp(){
 	file<<"# radius correlation"<<endl;
 	file.precision(15);
 	for(unsigned int i = 0; i < r_values.size(); i++ ){
-		file<<r_values.at(i)<<" "<<corr_length_func.at(i)<<endl;		
-		cout<<r_values.at(i)<<" "<<corr_length_func.at(i)<<endl;	
+		file<<r_values.at(i)<<" "<<corr_length_func.at(i)<<endl;			
 		}
 	file.close();
 	
@@ -760,6 +748,7 @@ void lattice::one_temp(){
 		cout<<endl<<"The average cluster size is: "<<avg_size<<"(+/-)"<<err<<" ("<<percent<<"% of lattice)"<<endl;		
 		}	
 	
+	if(output == "plot"){
 	try
 	{
 		Gnuplot g1("lines");
@@ -790,11 +779,13 @@ void lattice::one_temp(){
 			
 		g4.plot_x(this->get_vec("corr_eng"),"Correlation of eng per spin versus MC time");
 		
+		
 		this->wait_for_key();	
 		}
 	catch (GnuplotException ge){
         cout << ge.what() << endl;
 		}
+	}
 	}
 	
 void lattice::wait_for_key(){
