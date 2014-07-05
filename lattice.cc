@@ -754,6 +754,7 @@ void lattice::one_temp(){
 		Gnuplot g1("lines");
 		
 		g1.plot_x(this->get_vec("mag"),"Mag per spin versus MC time");
+		
 		g1<<"set term pdf";
 		g1<<"set output 'output/mag_plot.pdf'";
 		g1<<"replot";
@@ -769,6 +770,7 @@ void lattice::one_temp(){
 		Gnuplot g2("lines");
 		
 		g2.plot_x(this->get_vec("eng"),"Eng per spin versus MC time");
+		
 		g2<<"set term pdf";
 		g2<<"set output 'output/eng_plot.pdf'";
 		g2<<"replot";
