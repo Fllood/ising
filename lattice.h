@@ -77,6 +77,8 @@ class lattice{
 		
 		string output;					// choice of output
 		
+		string start;					// start mode
+		
 		/* pointer to the rng */
 		gsl_rng *rng;
 		
@@ -90,7 +92,7 @@ class lattice{
 	
 	public:
 		
-		lattice(int length, int dim, double Bfield, int iter, double Temp, int eq_time, string mode_for_sweep, string output_mode);
+		lattice(int length, int dim, double Bfield, int iter, double Temp, int eq_time, string mode_for_sweep, string output_mode, string start_mode);
 		
 		void update_lookups();		
 		

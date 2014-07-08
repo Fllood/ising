@@ -16,7 +16,7 @@
 
 using namespace std;
 
-lattice::lattice(int length, int dim, double Bfield, int iterations, double Temp, int eq_time, string mode_for_sweep, string output_mode){
+lattice::lattice(int length, int dim, double Bfield, int iterations, double Temp, int eq_time, string mode_for_sweep, string output_mode, string start_mode){
 	
 	L = length;
 	d = dim;
@@ -37,9 +37,13 @@ lattice::lattice(int length, int dim, double Bfield, int iterations, double Temp
 	
 	mode = mode_for_sweep;
 	
+	if(mode != "heatbath" && mode != "wolff") mode = "metro";
+	
 	output = output_mode;
 	
 	cout<< "selected algorithm: "<<mode<<endl;
+	
+	start = start_mode;
 	
 	spins.reserve(V);
 	
@@ -297,16 +301,20 @@ void lattice::sweep_wolff(){
 	}
 
 void lattice::run(){
-	ostringstream fs;	
-	ofstream file;
 	
 	this->update_lookups();
 	
 	this->equilibrate();
 	
-	fs<<"data/ising_"<<T<<".dat";
-		
-	file.open(fs.str().c_str());
+	ofstream file;
+	string filename ("data/ising_temp_");
+	filename.append(to_string(T));
+	filename.append("_");
+
+	filename.append(get_time_str());
+	filename.append(".dat");
+	file.open(filename.c_str());
+	
 	file<<"#t mag eng# at L="<<L<<" d="<<d<<endl;
 	file.precision(10);
 	file<<"#T = "<<T<<endl;
@@ -327,7 +335,7 @@ void lattice::run(){
 
 		engy = this->get_eng();
 		
-		if(output=="file")file<<t<<" "<<magn<<" "<<engy<<endl;	// Write measurements to file
+		if(output=="file" || output=="fileplot")file<<t<<" "<<magn<<" "<<engy<<endl;	// Write measurements to file
 		
 		mag.push_back(magn);										// Save measurements in vectors
 		
@@ -384,7 +392,9 @@ void lattice::scan_t(){
 	for (unsigned int i = 0; i < t_vec.size(); i++)cout<<t_vec.at(i)<<" ";
 	cout<<endl;
 	
-	this->cold_start();
+	if (start == "hot")this->hot_start();
+	else this->cold_start();
+	
 	ofstream file;
 	string filename ("data/t_scan_");
 	filename.append(get_time_str());
@@ -690,7 +700,8 @@ bool lattice::in_vec(const vector<int>& vec, int a){
 	}
 
 void lattice::one_temp(){
-	this->hot_start();
+	if (start == "hot")this->hot_start();
+	else this->cold_start();
 	
 	this->run();
 	
@@ -712,33 +723,48 @@ void lattice::one_temp(){
 	file.close();
 	
 	// Magnetization measurement
-	cout<<endl<<"avg mag: "<<this->get_val("avg_mag");	
+	
+	cout<<endl<<"avg mag: "<<avg_mag;
+	
+	int tau_eq_mag = 0;
+	
+	if(start == "hot"){
+		while(fabs(mag.at(tau_eq_mag))<= fabs(avg_mag) || tau_eq_mag > iter) tau_eq_mag++;
+		}
+	else while(fabs(mag.at(tau_eq_mag))>= fabs(avg_mag) || tau_eq_mag > iter) tau_eq_mag++;	
 	
 	
 	this->calc_mag_corr();	
 	
-	cout<<"(+/-)"<<this->get_std_err(this->get_vec("cov_mag"),this->get_vec("corr_mag"))<<endl;
+	cout<<"(+/-)"<<this->get_std_err(cov_mag,corr_mag)<<endl;
 	
 	double mag_sus = 	this->get_mag_sus();
 	double mag_sus_err = this->get_mag_sus_err();
 	cout<<"mag suscep: "<<mag_sus<<"(+/-)"<<mag_sus_err<<endl;
 	
-	double tau_int = this->calc_tau(this->get_vec("corr_mag"));
+	double tau_int_mag = this->calc_tau(corr_mag);
 	
-	cout<<"The integrated autocorrelation time of the magnetization is: "<<tau_int<<endl;	
+	cout<<"The integrated autocorrelation time of the magnetization is: "<<tau_int_mag<<endl;	
 	
 	// Energy measurement
-	cout<<endl<<"avg eng: "<<this->get_val("avg_eng");	
+	cout<<endl<<"avg eng: "<<avg_eng;	
+	
+	int tau_eq_eng = 0;
+	
+	if(start == "hot"){
+		while(fabs(eng.at(tau_eq_eng))<= fabs(avg_eng) || tau_eq_eng > iter) tau_eq_eng++;
+		}
+	else while(fabs(eng.at(tau_eq_eng))>= fabs(avg_eng) || tau_eq_eng > iter) tau_eq_eng++;
 	
 	this->calc_eng_corr();	
 	
-	cout<<"(+/-)"<<this->get_std_err(this->get_vec("cov_eng"),this->get_vec("corr_eng"))<<endl;
+	cout<<"(+/-)"<<this->get_std_err(cov_eng,corr_eng)<<endl;
 	
 	cout<<"specific heat: "<<this->get_spec_heat()<<"(+/-)"<<this->get_spec_heat_err()<<endl;
 	
-	tau_int = this->calc_tau(this->get_vec("corr_eng"));
+	double tau_int_eng = this->calc_tau(corr_eng);
 	
-	cout<<"The integrated autocorrelation time of the energy is: "<<tau_int<<endl;
+	cout<<"The integrated autocorrelation time of the energy is: "<<tau_int_eng<<endl;
 	
 	if(mode == "wolff"){
 		double avg_size = this->get_avg(cluster_sizes);
@@ -748,38 +774,71 @@ void lattice::one_temp(){
 		cout<<endl<<"The average cluster size is: "<<avg_size<<"(+/-)"<<err<<" ("<<percent<<"% of lattice)"<<endl;		
 		}	
 	
-	if(output == "plot"){
+	if(output == "plot" || output == "fileplot"){
 	try
 	{
 		Gnuplot g1("lines");
+		stringstream ss1;
+		ss1<<"set termopt enhanced; set xlabel 'MC time ({/Symbol t}_{int} = "<<to_string(tau_int_mag)<<" {/Symbol t}_{eq} = "<<to_string(tau_eq_mag)<<")'";
+		g1<<ss1.str();
+		g1<<"set ylabel 'Magnetization per spin'";
+		g1<<"set xrange [0:3000]";
 		
-		g1.plot_x(this->get_vec("mag"),"Mag per spin versus MC time");
+		g1.plot_x(mag,"Mag per spin versus MC time");
 		
-		g1<<"set term pdf";
-		g1<<"set output 'output/mag_plot.pdf'";
+		/*
+		string gnucmd = "";
+		while(gnucmd != "exit" && gnucmd != "quit" && gnucmd != "stay"){
+			cout<<"gnuplot>";
+			std::getline (cin,gnucmd);
+			g1.cmd(gnucmd);
+		}
+		*/
+		
+		g1<<"set term pdfcairo";
+		stringstream ss2;
+		ss2<<"set termopt enhanced; set output 'output/mag_plot_"<<mode<<"_"<<to_string(T)<<"_"<<get_time_str()<<".pdf'";
+		g1<<ss2.str();
 		g1<<"replot";
 		g1<<"set term pop";
 		
 		
 		Gnuplot g3("lines");
 			
-		g3.plot_x(this->get_vec("corr_mag"),"Correlation of mag per spin versus MC time");
+		g3.plot_x(corr_mag,"Correlation of mag per spin versus MC time");
 		
-
+		
 		
 		Gnuplot g2("lines");
 		
-		g2.plot_x(this->get_vec("eng"),"Eng per spin versus MC time");
+		stringstream ss4;
+		ss4<<"set termopt enhanced; set xlabel 'MC time ({/Symbol t}_{int} = "<<to_string(tau_int_eng)<<" {/Symbol t}_{eq} = "<<to_string(tau_eq_eng)<<")'";
+		g2<<ss4.str();
+		g2<<"set ylabel 'Energy per spin'";
+		g2<<"set xrange [0:3000]";
 		
-		g2<<"set term pdf";
-		g2<<"set output 'output/eng_plot.pdf'";
+		g2.plot_x(eng,"Eng per spin versus MC time");
+		
+		/*
+		gnucmd = "";
+		while(gnucmd != "exit" && gnucmd != "quit" && gnucmd != "stay"){
+			cout<<"gnuplot>";
+			std::getline (cin,gnucmd);
+			g2.cmd(gnucmd);
+		}
+		*/
+		
+		g2<<"set term pdfcairo";
+		stringstream ss3;
+		ss3<<"set termopt enhanced; set output 'output/eng_plot_"<<mode<<"_"<<to_string(T)<<"_"<<get_time_str()<<".pdf'";
+		g2<<ss3.str();
 		g2<<"replot";
 		g2<<"set term pop";
 		
 		
 		Gnuplot g4("lines");
 			
-		g4.plot_x(this->get_vec("corr_eng"),"Correlation of eng per spin versus MC time");
+		g4.plot_x(corr_eng,"Correlation of eng per spin versus MC time");
 		
 		
 		this->wait_for_key();	
@@ -791,6 +850,8 @@ void lattice::one_temp(){
 	}
 	
 void lattice::wait_for_key(){
+	std::cin.clear();
+    std::cin.ignore(std::cin.rdbuf()->in_avail());
 	#if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__TOS_WIN__)  // every keypress registered, also arrow keys
     cout << endl << "Press any key to continue..." << endl;
 
@@ -805,33 +866,7 @@ void lattice::wait_for_key(){
 	#endif
     return;
 	}
-/*
-double lattice::dist(int i, int j){
-	vector<int> r_i, r_j;
-	int i_c = i, j_c = j;
-	for(int l = 1; l <= d; l++){
-		int div = V/(pow(L,l));
-		int count = 0;
-		while(i_c > div){
-			i_c -= div;
-			count++;			
-			}
-		r_i.push_back(count);
-		count = 0;
-		while(j_c >= div){
-			j_c -= div;
-			count++;			
-			}
-		r_j.push_back(count);
-		}
-	int sum = 0;
-	for(unsigned int k = 0; k<r_i.size(); k++){
-		sum += pow(r_i.at(k)-r_j.at(k),2);		
-		}
-	// check if distance is the shortest possible	
-	return sqrt(sum);
-	}
-*/
+
 
 double lattice::dist(int i, int j){
 	int p;

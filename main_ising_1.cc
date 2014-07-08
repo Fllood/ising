@@ -14,8 +14,8 @@ using namespace std;
 int main(int argc, char *argv[])
 {	
 	
-	if(argc != 9){
-		cout<<"usage : ising_ex <length> <dimension> <B-field> <iterations> <T> <eq_time> <algorithm> <output>"<<endl;
+	if(argc != 10){
+		cout<<"usage : ising_ex <length> <dimension> <B-field> <iterations> <T> <eq_time> <algorithm> <output> <start>"<<endl;
 		return 1;
 	}
 	
@@ -27,8 +27,10 @@ int main(int argc, char *argv[])
 	int eq_time = atoi(argv[6]);
 	string mode_for_sweep = argv[7];
 	string output_mode = argv[8];
+	string start_mode = argv[9];
 
-	lattice l1(Len,dim,Bfield,iterations,Temp,eq_time, mode_for_sweep, output_mode);	
+	lattice l1(Len,dim,Bfield,iterations,Temp,eq_time, mode_for_sweep, 
+	output_mode, start_mode);	
 	
 	
 	if(Temp){		//skip when Temp = 0
