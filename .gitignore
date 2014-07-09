@@ -4,6 +4,8 @@
 
 *.pdf
 
-
+screenlog.0
 
 *_ex
+
+/data
