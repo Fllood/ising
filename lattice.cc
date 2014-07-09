@@ -308,7 +308,9 @@ void lattice::run(){
 	
 	ofstream file;
 	string filename ("data/ising_temp_");
-	filename.append(to_string(T));
+	ostringstream convert0;
+	convert0<<T;
+	filename.append(convert0.str());
 	filename.append("_");
 
 	filename.append(get_time_str());
@@ -514,10 +516,10 @@ double lattice::calc_tau(const vector<double>& corr){
 
 void lattice::calc_corr_length_avg(){
 	int i = s_cl;
-	s_i_avg += spins[i]/double(iter);
+	//s_i_avg += spins[i]/double(iter);
 	for(int j = 0; j < V; j++){
 		s_ij_avg.at(j) += spins[i]*spins[j]/double(iter);
-		s_j_avg.at(j) += spins[j]/double(iter);		
+		//s_j_avg.at(j) += spins[j]/double(iter);		
 		}	
 	}
 
@@ -534,9 +536,9 @@ void lattice::calc_corr_length_func(){
 		for(int j = 0; j<V; j++){
 			double distance = dist(i,j);
 			
-			if(r_values.at(k) == distance){
+			if(r_values.at(k) == distance ){
 				n_r++;
-				sum += s_ij_avg.at(j)-s_i_avg*s_j_avg.at(j);				
+				sum += s_ij_avg.at(j)-avg_mag*avg_mag;				
 				}			
 		}	
 		sum /= double(n_r);
@@ -779,7 +781,10 @@ void lattice::one_temp(){
 	{
 		Gnuplot g1("lines");
 		stringstream ss1;
-		ss1<<"set termopt enhanced; set xlabel 'MC time ({/Symbol t}_{int} = "<<to_string(tau_int_mag)<<" {/Symbol t}_{eq} = "<<to_string(tau_eq_mag)<<")'";
+		ostringstream convert1,convert2;
+		convert1<<tau_int_mag;
+		convert2<<tau_eq_mag;
+		ss1<<"set termopt enhanced; set xlabel 'MC time ({/Symbol t}_{int} = "<<convert1.str()<<" {/Symbol t}_{eq} = "<<convert2.str()<<")'";
 		g1<<ss1.str();
 		g1<<"set ylabel 'Magnetization per spin'";
 		g1<<"set xrange [0:3000]";
@@ -797,7 +802,9 @@ void lattice::one_temp(){
 		
 		g1<<"set term pdfcairo";
 		stringstream ss2;
-		ss2<<"set termopt enhanced; set output 'output/mag_plot_"<<mode<<"_"<<to_string(T)<<"_"<<get_time_str()<<".pdf'";
+		ostringstream convert3;
+		convert3<<T;
+		ss2<<"set termopt enhanced; set output 'output/mag_plot_"<<mode<<"_"<<convert3.str()<<"_"<<get_time_str()<<".pdf'";
 		g1<<ss2.str();
 		g1<<"replot";
 		g1<<"set term pop";
@@ -812,7 +819,10 @@ void lattice::one_temp(){
 		Gnuplot g2("lines");
 		
 		stringstream ss4;
-		ss4<<"set termopt enhanced; set xlabel 'MC time ({/Symbol t}_{int} = "<<to_string(tau_int_eng)<<" {/Symbol t}_{eq} = "<<to_string(tau_eq_eng)<<")'";
+		ostringstream convert4,convert5;
+		convert4<<tau_int_eng;
+		convert5<<tau_eq_eng;
+		ss4<<"set termopt enhanced; set xlabel 'MC time ({/Symbol t}_{int} = "<<convert4.str()<<" {/Symbol t}_{eq} = "<<convert5.str()<<")'";
 		g2<<ss4.str();
 		g2<<"set ylabel 'Energy per spin'";
 		g2<<"set xrange [0:3000]";
@@ -830,7 +840,9 @@ void lattice::one_temp(){
 		
 		g2<<"set term pdfcairo";
 		stringstream ss3;
-		ss3<<"set termopt enhanced; set output 'output/eng_plot_"<<mode<<"_"<<to_string(T)<<"_"<<get_time_str()<<".pdf'";
+		ostringstream convert6;
+		convert6<<T;
+		ss3<<"set termopt enhanced; set output 'output/eng_plot_"<<mode<<"_"<<convert6.str()<<"_"<<get_time_str()<<".pdf'";
 		g2<<ss3.str();
 		g2<<"replot";
 		g2<<"set term pop";
