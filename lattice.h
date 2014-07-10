@@ -67,8 +67,8 @@ class lattice{
 		vector<double> r_values;			// corresponding r values
 				
 		
-		double  s_i_avg;	// Averages for correlation length		
-		vector<double> s_ij_avg, s_j_avg;
+			// Averages for correlation length		
+		vector<double> s_ij_avg;
 		
 		int s_cl;								// Seed spin for correlation length
 				

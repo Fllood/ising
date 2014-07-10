@@ -111,8 +111,7 @@ void lattice::update_lookups(){
 	for(int i = 0; i < V; i++) {
 		s_ij_avg.push_back(0);
 		}
-	
-	s_i_avg = 0;		
+			
 	
 	avg_mag = 0;
 	avg_eng = 0;
@@ -873,22 +872,24 @@ void lattice::wait_for_key(){
 	}
 
 
+
 double lattice::dist(int i, int j){
 	int p;
 	if(i >= V) i %= V;
 	if(j >= V) j %= V;
 	if(i<j) p = j-i;
-	else p = i-j; 
+	else p = i-j;
+	
 	int sum = 0;
-	int rest = p % L;
-	p -= rest;
-	int taxlen = rest;
-	if (rest >= (L-1)/sqrt(2)) taxlen = L - rest;
-	sum += pow(taxlen,2);
-	rest = p / L;
-	taxlen = rest;
-	if(rest >= (L-1)/sqrt(2)) taxlen = L -rest;
-	sum += pow(taxlen,2);		
+	for(int dim = d; dim > 0; dim-- ){
+		int fac = p / (pow(L,dim-1));
+		int rest = p % int(pow(L,dim-1));
+		p = rest;
+		int taxlen = fac;
+		if(fac >= (L-1)/sqrt(2)) taxlen = L - fac;
+		sum += pow(taxlen,2);
+		}
+			
 	return sqrt(sum);
 	}
 	
