@@ -58,18 +58,11 @@ lattice::lattice(int length, int dim, double Bfield, int iterations, double Temp
 	boot_values.reserve(M);
 	
 	
-	s_ij_avg.reserve(V);
-	s_j_avg.reserve(V);
-	s_i_avg = 0;	
+	s_ij_avg.reserve(V);	
 	
 	for(int i = 0; i < V; i++) {
 		s_ij_avg.push_back(0);
-		s_j_avg.push_back(0);
-		
 		}
-	
-	
-	
 	
 	this->update_lookups();	
 	
@@ -83,7 +76,7 @@ lattice::lattice(int length, int dim, double Bfield, int iterations, double Temp
 	
 	s_cl = floor(V * gsl_rng_uniform(rng));	
 	
-		
+	
 	
 	}
 
@@ -113,10 +106,10 @@ void lattice::update_lookups(){
 	corr_length_func.clear();
 	r_values.clear();
 	
+	s_ij_avg.clear();
+
 	for(int i = 0; i < V; i++) {
 		s_ij_avg.push_back(0);
-		s_j_avg.push_back(0);
-		
 		}
 	
 	s_i_avg = 0;		
@@ -371,7 +364,7 @@ void lattice::run(){
 void lattice::scan_t(){
 	vector<double> t_vec;
 	int num = 20;
-	int t_c_num = 10;
+	int t_c_num = 20;
 	double start_t = 1.5;
 	double end_t = 3.5;
 	double margin = 0.25;
