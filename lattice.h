@@ -11,56 +11,88 @@ using namespace std;
 
 class lattice{
 	private:
-		vector<short> spins;		// Spins contained in one dim vector
+		vector<short> spins;			// Spins contained in one dim vector
 		
-		vector<double> mag;			// Magnetization measurements
+		vector<double> mag;				// Magnetization measurements
 		
-		vector<double> eng;			// Energy measurements
+		vector<double> eng;				// Energy measurements
 		
-		vector<double> cov_mag; 	// Magnetic covariance function
+		vector<double> cov_mag; 		// Magnetic covariance function
 		
-		vector<double> corr_mag;	// Magnetic correlation function
+		vector<double> corr_mag;		// Magnetic correlation function
 		
-		vector<double> cov_eng; 	// Energy covariance function
+		vector<double> cov_eng; 		// Energy covariance function
 		
-		vector<double> corr_eng; 	// Energy correlation function
+		vector<double> corr_eng; 		// Energy correlation function
 		
-		double avg_mag;				// Average magnetization per spin
+		vector<double> cov_clu;			// Cluster size covariance function		
 		
-		double avg_eng;				// Average energy per spin
+		vector<double> corr_clu;		// Cluster size correlation function
+		
+		double avg_mag;					// Average magnetization per spin
+		
+		double avg_eng;					// Average energy per spin
+		
+		int L;							// Length of axis		
+		
+		int d;							// Dimensions	
+		
+		int V;							// Volume
+		
+		double b;						// Inverse temperature beta
+		
+		double T;						// Temperature
+		
+		double B;						// Magnetic field
+		
+		int iter;						// Number of steps
+		
+		int t_eq;						// equilibration time
+		
+		int M;							// Bootstrap samples
 		
 		
-		int L;						// Length of axis		
+		vector<double> lookup_met_J;	// Lookup table for (2*d+1) exponential values containing J
 		
-		int d;						// Dimensions	
+		vector<double> lookup_met_B;	// Lookup table for 2 exponential values containing B
 		
-		int V;						// Volume
+		vector<double> lookup_heat_J;	// Lookup table for (2*d+1) exponential values containing J (heat bath)
 		
-		double b;					// Inverse temperature beta
+		vector<double> boot_samples;
 		
-		double T;					// Temperature
+		vector<double> boot_values;
 		
-		double B;					// Magnetic field
+		vector<double> corr_length_func;	// Correlation length function
 		
-		int iter;					// Number of steps
+		vector<double> r_values;			// corresponding r values
+				
 		
-		int t_eq;					// equilibration time
+		double  s_i_avg;	// Averages for correlation length		
+		vector<double> s_ij_avg, s_j_avg;
 		
+		int s_cl;								// Seed spin for correlation length
+				
 		
-		vector<double> lookup_J;	// Lookup table for (2*d+1) exponential values containing J
+		string mode;					// metropolis or heat bath
 		
-		vector<double> lookup_B;	// Lookup table for 2 exponential values containing B
+		string output;					// choice of output
+		
+		string start;					// start mode
 		
 		/* pointer to the rng */
 		gsl_rng *rng;
 		
-		ofstream file;
-		
 		vector<double> betas;
+		
+		double wolff_prob;
+		
+		vector<double> cluster_sizes;
+		
+		
 	
 	public:
 		
-		lattice(int length, int dim, double Bfield, int iter, double Temp, int eq_time);
+		lattice(int length, int dim, double Bfield, int iter, double Temp, int eq_time, string mode_for_sweep, string output_mode, string start_mode);
 		
 		void update_lookups();		
 		
@@ -78,11 +110,7 @@ class lattice{
 		
 		double get_mag();
 		
-		vector<double> get_mag_vec();
-		
 		double get_eng();
-		
-		vector<double> get_eng_vec();
 		
 		double cov_func(int t_c, const vector<double>& vec);
 		
@@ -92,21 +120,65 @@ class lattice{
 		
 		void calc_eng_cov();
 		
+		void calc_clu_cov();
+		
 		void calc_mag_corr();
 		
 		void calc_eng_corr();
 		
+		void calc_clu_corr();
+		
+		
+		double calc_tau(const vector<double>& corr);
+		
 		double get_avg(const vector<double>& vec);
+		
+		double get_avg(const vector<int>& vec);		
+		
+		double get_std_err(const vector<double>& cov, const vector<double>& corr);
+		
+		double get_spec_heat();
+		
+		double get_spec_heat_err();
+		
+		double get_mag_sus();
+		
+		double get_mag_sus_err();
+		
+		double get_pow_2_avg(const vector<double>& vec);
 		
 		vector<double> get_vec(string choice);
 		
-		void rem_equilib(vector<double>& vec);
+		double get_val(string choice);
 		
-		void sweep();
+		void equilibrate();
+		
+		void sweep_met();
+		
+		void sweep_heat();
+		
+		void sweep_wolff();
 		
 		void run();
 		
-		void betarun();
+		void scan_t();
+		
+		bool fexists(string filename);
+		
+		string get_time_str();
+		
+		bool in_vec(const vector<int>& vec, int a);
+		
+		void one_temp();
+		
+		void wait_for_key();
+		
+		void calc_corr_length_avg();
+		
+		void calc_corr_length_func();		
+		
+		double dist(int i, int j);
+		
 	};
 
 #endif

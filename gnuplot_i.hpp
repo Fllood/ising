@@ -245,7 +245,7 @@ class Gnuplot
     /// interpolation and approximation of data, arguments:
     ///  csplines, bezier, acsplines (for data values > 0), sbezier, unique, frequency
     /// (works only with plot_x, plot_xy, plotfile_x, plotfile_xy
-    /// (if smooth is set, set_style has no effekt on data plotting)
+    /// (if smooth is set, set_style has no effect on data plotting)
     Gnuplot& set_smooth(const std::string &stylestr = "csplines");
 
     // ----------------------------------------------------------------------
@@ -1597,9 +1597,9 @@ Gnuplot& Gnuplot::plot_image(const unsigned char * ucPicBuf,
     // write the data to file
     //
     int iIndex = 0;
-    for(int iRow = 0; iRow < iHeight; iRow++)
+    for(unsigned int iRow = 0; iRow < iHeight; iRow++)
     {
-        for(int iColumn = 0; iColumn < iWidth; iColumn++)
+        for(unsigned int iColumn = 0; iColumn < iWidth; iColumn++)
         {
             tmp << iColumn << " " << iRow  << " " 
                 << static_cast<float>(ucPicBuf[iIndex++]) << std::endl;

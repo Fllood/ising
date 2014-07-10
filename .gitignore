@@ -1,9 +1,11 @@
 # no files ending with ~
 *~
 .gitignore
-*.dat
-*.pdf
 
-/data
+
+
+screenlog.0
 
 *_ex
+
+/data
