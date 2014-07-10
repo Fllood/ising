@@ -5,6 +5,9 @@ make
 
 The usage of this program is based on a command line interface:
 ising_ex <length of one axis of the grid> <dimension> <B-field>
-	 <iterations> <Temperature> <equilibration time> (in one line)
+	 <iterations> <Temperature> <equilibration time> <algorithm>
+	 <output> <start> (in one line)
+
+visit https://github.com/Fllood/ising/wiki/Getting-started for further explanation
 
  
